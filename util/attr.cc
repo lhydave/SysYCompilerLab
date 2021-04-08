@@ -1,11 +1,24 @@
 // utility functions for attributes
 
 #include "include/attr.h"
+#ifdef DEBUG
+#define dbg_printf(...) printf(__VA_ARGS__)
+#else
+#define dbg_printf(...)
+#endif
 
 // rewrite yyerror
 void yyerror(const char *msg)
 {
-	fprintf(stderr, "error at line %d: %s\n%s\n", yylineno, msg, yytext);
+	fprintf(stderr, "error happens near line %d: %s\n\n", yylineno, msg);
+}
+
+// allocate a new space for string
+char *namestr(const char *s)
+{
+	char *ret = new char[strlen(s) + 1];
+	strcpy(ret, s);
+	return ret;
 }
 
 // convert string to data_type
