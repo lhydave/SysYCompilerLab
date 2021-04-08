@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.lex": "lex",
+        "string_view": "cpp",
+        "vector": "cpp",
+        "string": "cpp"
+    }
+}
