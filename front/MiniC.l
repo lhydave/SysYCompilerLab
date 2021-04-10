@@ -6,6 +6,9 @@
 %{
 #include "include/node.h"
 #include "MiniC.tab.hh"
+static int err_cnt = 0;
+const int err_max = 30;
+extern int yylineno;
 %}
 
 whitespace      [ \n\t\r\v\f]
@@ -52,3 +55,14 @@ IllegalSymbol   .
 {IllegalName}                 { yyerror("illegal identifier name"); }
 {IllegalSymbol}               { yyerror("illegal symbol"); }
 %%
+// rewrite yyerror
+void yyerror(const char *msg)
+{
+	++err_cnt;
+	if (err_cnt > err_max)
+	{
+		fprintf(stderr, "Too many errors, aborted\n");
+		exit(1);
+	}
+	fprintf(stderr, "error happens near line %d: %s\n%s\n\n", yylineno, msg, yytext);
+}

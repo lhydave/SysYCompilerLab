@@ -22,7 +22,6 @@ typedef union{
 
 // error reporting
 void yyerror(const char *msg);
-extern int yylineno;
 
 // conversion
 char *namestr(const char *s);
