@@ -21,5 +21,4 @@ eeyore-lex: front/MiniC.l
 	$(LEX) -o lex.yy.cc front/MiniC.l
 
 clean:
-	rm -f *.o
-	rm -f *.cc *.hh
+	rm -f *.o *.output *.cc *.hh

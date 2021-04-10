@@ -79,9 +79,6 @@ Stmt
     | CONTINUE  ';' ;
     | RETURN Exp  ';' ;
     | RETURN ';' ;
-//ElseStmt
-//   : ELSE Stmt ;
-//    |   ;
 
 Exp : AddExp    ;
 Cond : LOrExp   ;
