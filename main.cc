@@ -1,5 +1,4 @@
 #include<cstdio>
-#include "include/node.hh"
 #include "MiniC.tab.hh"
 extern FILE* yyin;
 int yyparse(void);
