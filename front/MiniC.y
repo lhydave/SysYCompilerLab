@@ -1,6 +1,6 @@
 /* Syntax analyzer of MiniC */
 %{
-#include "include/node.h"
+#include "include/node.hh"
 #define YYSTYPE yylval_t
 int yyparse(void);
 int yylex(void);
@@ -21,43 +21,67 @@ Decl
     : ConstDecl ;
     | VarDecl ;
 ConstDecl : CONST DTYPE ConstDefs ';'  ;
+    | CONST error ConstDefs ';' { yyerror("missing type in declaration"); }
+    | CONST DTYPE ConstDefs error { yyerror("expected ';'"); }
+    | CONST ';' { yyerror("nothing declared"); }
+    | CONST DTYPE error ';' { yyerror("invalid symbols among declarations");}
 ConstDefs
     : ConstDef     ;
     | ConstDef ',' ConstDefs ;
 ConstDef
     : ID ConstArray '=' ConstInitVal  ;
+    | ID ConstArray error { yyerror("const variable must be initialized"); }
 ConstArray
     : '[' ConstExp ']' ConstArray ;
     | ;
+    | '[' ConstExp error ConstArray { yyerror("expected ']'"); }
+    | '[' error ']' ConstArray { yyerror("array size in delaration must be constant"); }
 ConstInitVal
     : ConstExp  ;
     | '{' ConstInitVals '}' ;
     | '{' '}'   ;
+    | '{' ConstInitVals error { yyerror("expected '}'"); }
+    | error { yyerror("expected constant expression"); }
 ConstInitVals
     : ConstInitVal  ;
     | ConstInitVal ',' ConstInitVals  ;
+
 VarDecl : DTYPE VarDefs ';'    ;
+    | DTYPE ';' { yyerror("nothing declared"); }
+    | DTYPE VarDefs error { yyerror("missing ';'"); }
+    | DTYPE error ';' { yyerror("invalid symbols among declarations"); yyerrok; }
 VarDefs
     : VarDef    ;
     | VarDef ',' VarDefs  ;
 VarDef
     : ID ConstArray '=' InitVal ;
+    | ID ConstArray ;
 InitVal
     : Exp   ;
     | '{' InitVals '}'  ;
     | '{' '}' ;
+    | '{' InitVals error { yyerror("expected '}"); }
+    | error { yyerror("expected expression"); }
 InitVals
     : InitVal   ;
     | InitVal ',' InitVals  ;
 
 FuncDef
     : DTYPE ID  '(' FuncFParams ')' Block   ;
+    | DTYPE ID '(' FuncFParams error { yyerror("expected ')'"); }
 FuncFParams
     : FuncFParam ',' FuncFParams    ;
     | FuncFParam    ;
     | ;
 FuncFParam
-    : DTYPE ID ConstArray   ;
+    : DTYPE ID ParaArray   ;
+    | ID ParaArray { yyerror("missing type of parameter"); }
+    | DTYPE error { yyerror("missing identifier of parameter"); }
+ParaArray
+    : '[' ']' ConstArray ;
+    | ;
+    | '[' ConstExp ']' ConstArray { yyerror("the first dimension should be empty"); }
+    | '[' error ConstArray  { yyerror("expected ']'"); }
 
 Block
     : '{' BlockItems '}' ;

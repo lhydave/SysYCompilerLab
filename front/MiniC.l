@@ -4,11 +4,8 @@
 %option noinput
 %option nounput
 %{
-#include "include/node.h"
+#include "include/node.hh"
 #include "MiniC.tab.hh"
-static int err_cnt = 0;
-const int err_max = 30;
-extern int yylineno;
 %}
 
 whitespace      [ \n\t\r\v\f]
@@ -55,14 +52,18 @@ IllegalSymbol   .
 {IllegalName}                 { yyerror("illegal identifier name"); }
 {IllegalSymbol}               { yyerror("illegal symbol"); }
 %%
+
+static int err_cnt = 0;
+const int err_max = 60;
 // rewrite yyerror
-void yyerror(const char *msg)
+void yyerror(const char *msg, int lineno)
 {
 	++err_cnt;
 	if (err_cnt > err_max)
 	{
-		fprintf(stderr, "Too many errors, aborted\n");
+		fprintf(stderr, "Too many errors, aborted.\n");
 		exit(1);
 	}
-	fprintf(stderr, "error happens near line %d: %s\n%s\n\n", yylineno, msg, yytext);
+	fprintf(stderr, "error happens near line %d: %s\n", lineno, msg);
 }
+

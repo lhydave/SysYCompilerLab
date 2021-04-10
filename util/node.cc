@@ -1,6 +1,6 @@
 // utility functions for attributes
 
-#include "include/node.h"
+#include "include/node.hh"
 #ifdef DEBUG
 #define dbg_printf(...) printf(__VA_ARGS__)
 #else

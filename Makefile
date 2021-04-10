@@ -1,7 +1,7 @@
 LEX 		:= flex
 YACC 		:= bison
 CC 			:= g++
-CFLAGS 		:= -ll -lm -O2 -Wall -std=c++11
+CFLAGS 		:= -ll -ly -lm -O2 -Wall -std=c++11
 TOP 		:= .
 INCLUDE 	:= util/node.cc
 YACCDEBUG	:= -v --report=all
@@ -12,7 +12,7 @@ eeyore-parser: eeyore-tab $(INCLUDE)
 	$(CC) $(CFLAGS) -I$(TOP) MiniC.tab.cc lex.yy.cc $(INCLUDE) -o parser.o
 
 eeyore-tab: eeyore-lex $(INCLUDE)
-	$(YACC) -d -o MiniC.tab.cc front/MiniC.y
+	$(YACC) $(YACCDEBUG) -d -o MiniC.tab.cc front/MiniC.y
 
 eeyore-lexer: eeyore-lex $(INCLUDE)
 	$(CC) $(CFLAGS) -D LEXONLY -I$(TOP) lex.yy.cc $(INCLUDE) -o lexer.o
