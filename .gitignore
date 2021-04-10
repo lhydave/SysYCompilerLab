@@ -3,3 +3,4 @@
 lex.yy.cc
 MiniC.tab.cc
 MiniC.tab.hh
+.*

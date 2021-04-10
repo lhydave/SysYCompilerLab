@@ -14,9 +14,6 @@ eeyore-parser: eeyore-tab $(INCLUDE)
 eeyore-tab: eeyore-lex $(INCLUDE)
 	$(YACC) $(YACCDEBUG) -d -o MiniC.tab.cc front/MiniC.y
 
-eeyore-lexer: eeyore-lex $(INCLUDE)
-	$(CC) $(CFLAGS) -D LEXONLY -I$(TOP) lex.yy.cc $(INCLUDE) -o lexer.o
-
 eeyore-lex: front/MiniC.l
 	$(LEX) -o lex.yy.cc front/MiniC.l
 
