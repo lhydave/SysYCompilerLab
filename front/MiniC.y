@@ -48,7 +48,7 @@ ConstInitVals
 
 VarDecl : DTYPE VarDefs ';'    ;
     | DTYPE ';' { yyerror("nothing declared"); }
-    | DTYPE VarDefs error { yyerror("missing ';'"); }
+    | DTYPE VarDefs error { yyerror("expected ';'"); }
     | DTYPE error ';' { yyerror("invalid symbols among declarations"); yyerrok; }
 VarDefs
     : VarDef    ;
@@ -85,6 +85,7 @@ ParaArray
 
 Block
     : '{' BlockItems '}' ;
+    | '{' BlockItems error  { yyerror("expected '}'"); }
 BlockItems
     :  BlockItem BlockItems ;
     |   ;
@@ -97,12 +98,21 @@ Stmt
     |   ';' ;
     | Block ;
     | IF '(' Cond ')' Stmt ;
-    | IF '(' Cond ')' Stmt  ELSE Stmt ;
+    | IF '(' Cond ')' Stmt ELSE Stmt ;
     | WHILE '(' Cond ')' Stmt   ;
     | BREAK ';' ;
     | CONTINUE  ';' ;
     | RETURN Exp  ';' ;
     | RETURN ';' ;
+    | LVal '=' error { yyerror("expected expression"); }
+    | LVal '=' Exp error { yyerror("expected ';'"); }
+    | Exp error { yyerror("expected ';'"); }
+    | IF '(' error ')' Stmt { yyerror("expected condition"); }
+    | IF '(' Cond error Stmt { yyerror("expected ')'"); }
+    | WHILE '(' error ')' Stmt { yyerror("expected condition"); }
+    | WHILE '(' Cond error Stmt { yyerror("expected ')"); }
+    | BREAK error { yyerror("expected ';'"); }
+    | CONTINUE error { yyerror("expected ';'"); }
 
 Exp : AddExp    ;
 Cond : LOrExp   ;
@@ -110,14 +120,17 @@ LVal : ID Array ;
 Array
     : '[' Exp ']'  Array ;
     | ;
+    | '[' Exp error Array { yyerror("expected ']'"); }
 PrimaryExp 
     : '(' Exp ')' ;
     | LVal  ;
     | NUM   ;
+    | '(' Exp error { yyerror("expected ')'"); }
 UnaryExp
     : PrimaryExp    ;
     | ID '(' FuncRParams ')'   ;
     | UnaryOp UnaryExp  ;
+    | ID '(' FuncRParams error   { yyerror("expected ')'"); }
 UnaryOp
     : '+'   ;
     | '-' ;

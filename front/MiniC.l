@@ -52,18 +52,3 @@ IllegalSymbol   .
 {IllegalName}                 { yyerror("illegal identifier name"); }
 {IllegalSymbol}               { yyerror("illegal symbol"); }
 %%
-
-static int err_cnt = 0;
-const int err_max = 60;
-// rewrite yyerror
-void yyerror(const char *msg, int lineno)
-{
-	++err_cnt;
-	if (err_cnt > err_max)
-	{
-		fprintf(stderr, "Too many errors, aborted.\n");
-		exit(1);
-	}
-	fprintf(stderr, "error happens near line %d: %s\n", lineno, msg);
-}
-
