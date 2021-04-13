@@ -1,7 +1,6 @@
 /* Syntax analyzer of MiniC */
 %{
 #include "include/node.hh"
-#define YYSTYPE yylval_t
 int yyparse(void);
 int yylex(void);
 %}
