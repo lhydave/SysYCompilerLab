@@ -1,6 +1,7 @@
 /* Syntax analyzer of MiniC */
 %{
 #include "include/node.hh"
+#include "include/symtab.hh"
 int yyparse(void);
 int yylex(void);
 %}

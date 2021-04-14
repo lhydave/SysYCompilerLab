@@ -1,5 +1,5 @@
 #include<cstdio>
-#include "MiniC.tab.hh"
+#include "SysY.tab.hh"
 extern FILE* yyin;
 int yyparse(void);
 int yylex(void);

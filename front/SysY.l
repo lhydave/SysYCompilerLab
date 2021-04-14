@@ -5,7 +5,7 @@
 %option nounput
 %{
 #include "include/node.hh"
-#include "MiniC.tab.hh"
+#include "SysY.tab.hh"
 %}
 
 whitespace      [ \n\t\r\v\f]

@@ -29,7 +29,7 @@ struct arith_exp_node;
 struct logic_exp_node;
 struct func_call_exp_node;
 
-typedef union {
+using yylval_t = union {
 	int num;
 	const char *name;
 	op_t op;
@@ -52,8 +52,7 @@ typedef union {
 	arith_exp_node *arith_exp;
 	logic_exp_node *logic_exp;
 	func_call_exp_node *func_call_exp;
-
-} yylval_t;
+};
 #define YYSTYPE yylval_t
 
 // error reporting

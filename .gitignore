@@ -1,7 +1,7 @@
 .DS_Store
 *.o
 lex.yy.cc
-MiniC.tab.cc
-MiniC.tab.hh
-MiniC.output
+SysY.tab.cc
+SysY.tab.hh
+SysY.output
 .*
