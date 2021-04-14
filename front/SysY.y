@@ -61,7 +61,6 @@ InitVal
     | '{' '}' ;
     | '{' InitVals error { yyerror("expected '}'"); }
     | '{' error { yyerror("expected '}'"); }
-    | error { yyerror("expected expression"); }
 InitVals
     : InitVal   ;
     | InitVal ',' InitVals  ;
