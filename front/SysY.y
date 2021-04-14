@@ -10,6 +10,24 @@ int yylex(void);
 %token <num> NUM 
 %token <op> T_GE T_LE T_EQ T_NE
 %token <dtype> DTYPE
+%type <node> CompUnit Decl ConstDecl ConstDefs VarDecl VarDefs FuncFParams
+            Block BlockItems BlockItem FuncRParams
+%type <vardef> ConstDef VarDef FuncFParam
+%type <funcdef> FuncDef
+%type <stmt> Stmt Cond 
+%type <assign_stmt> AssignStmt
+%type <exp_stmt> ExpStmt
+%type <if_stmt> IfStmt
+%type <if_else_stmt> IfElseStmt
+%type <while_stmt> WhileStmt
+%type <goto_stmt> GotoStmt
+%type <ret_stmt> RetStmt
+%type <exp_basic> ConstArray ConstInitVal ConstInitVals InitVal InitVals Exp
+                  Array PrimaryExp
+%type <array_exp> LVal
+%type <arith_exp> MulExp AddExp RelExp EqExp
+%type <logic_exp> LOrExp LAndExp
+%type <func_call_exp> FuncCall
 %%
 
 CompUnit
@@ -74,14 +92,13 @@ FuncFParams
     | FuncFParam    ;
     | ;
 FuncFParam
-    : DTYPE ID ParaArray   ;
-    | ID ParaArray { yyerror("missing type of parameter"); }
+    : DTYPE ID '[' ']' ConstArray   ;
+    | DTYPE ID  ;
+    | DTYPE ID '[' ConstExp ']' ConstArray { yyerror("the first dimension should be empty"); }
+    | DTYPE ID '[' error ConstArray  { yyerror("expected ']'"); }
+    | ID  { yyerror("missing type of parameter"); }
+    | ID '[' ']' ConstArray { yyerror("missing type of parameter"); }
     | DTYPE error { yyerror("missing identifier of parameter"); }
-ParaArray
-    : '[' ']' ConstArray ;
-    | ;
-    | '[' ConstExp ']' ConstArray { yyerror("the first dimension should be empty"); }
-    | '[' error ConstArray  { yyerror("expected ']'"); }
 
 Block
     : '{' BlockItems '}' ;
@@ -93,27 +110,41 @@ BlockItem
     : Decl  ;
     | Stmt  ;
 Stmt
-    : LVal '=' Exp  ';' ;
-    |   Exp ';' ;
-    |   ';' ;
-    | Block ;
-    | IF '(' Cond ')' Stmt ;
-    | IF '(' Cond ')' Stmt ELSE Stmt ;
-    | WHILE '(' Cond ')' Stmt   ;
-    | BREAK ';' ;
-    | CONTINUE  ';' ;
-    | RETURN Exp  ';' ;
-    | RETURN ';' ;
-    | LVal '=' error { yyerror("expected expression"); }
-    | LVal '=' Exp error { yyerror("expected ';'"); }
-    | Exp error { yyerror("expected ';'"); }
-    | IF '(' error ')' Stmt { yyerror("expected condition"); }
-    | IF '(' Cond error Stmt { yyerror("expected ')'"); }
-    | WHILE '(' error ')' Stmt { yyerror("expected condition"); }
-    | WHILE '(' Cond error Stmt { yyerror("expected ')"); }
+    : AssignStmt     ;
+    | ExpStmt   ;
+    | ';'       ;
+    | Block     ;
+    | IfStmt    ;
+    | IfElseStmt ;
+    | WhileStmt ;
+    | GotoStmt ;
+    | RetStmt ;
     | BREAK error { yyerror("expected ';'"); }
     | CONTINUE error { yyerror("expected ';'"); }
-
+AssignStmt
+    : LVal '=' Exp  ';' ;
+    | LVal '=' error { yyerror("expected expression"); }
+    | LVal '=' Exp error { yyerror("expected ';'"); }
+ExpStmt
+    :   Exp ';' ;
+    | Exp error { yyerror("expected ';'"); }
+IfStmt
+    : IF '(' Cond ')' Stmt ;
+    | IF '(' error ')' Stmt { yyerror("expected condition"); }
+    | IF '(' Cond error Stmt { yyerror("expected ')'"); }
+IfElseStmt
+    : IF '(' Cond ')' Stmt ELSE Stmt ;
+WhileStmt
+    : WHILE '(' Cond ')' Stmt   ;
+    | WHILE '(' error ')' Stmt { yyerror("expected condition"); }
+    | WHILE '(' Cond error Stmt { yyerror("expected ')"); }
+GotoStmt
+    : BREAK ';' ;
+    | CONTINUE  ';' ;
+RetStmt
+    : RETURN Exp  ';' ;
+    | RETURN ';' ;
+    
 Exp : AddExp    ;
 Cond : LOrExp   ;
 LVal : ID Array ;
@@ -128,8 +159,10 @@ PrimaryExp
     | '(' Exp error { yyerror("expected ')'"); }
 UnaryExp
     : PrimaryExp    ;
-    | ID '(' FuncRParams ')'   ;
+    | FuncCall      ;
     | UnaryOp UnaryExp  ;
+FuncCall
+    : ID '(' FuncRParams ')'   ;
     | ID '(' FuncRParams error   { yyerror("expected ')'"); }
 UnaryOp
     : '+'   ;

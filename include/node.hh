@@ -9,7 +9,7 @@
 using std::string;
 using std::vector;
 enum data_t { VOID, CONST_INT, INT };
-enum op_t { EQ, NE, GE, LE, G, L, ADD, SUB, MUL, DIV, MOD, AND, OR, NOT };
+enum op_t { NONE, EQ, NE, GE, LE, G, L, ADD, SUB, MUL, DIV, MOD, AND, OR, NOT };
 struct node_basic;
 struct vardef_node;
 struct arraydef_node;
@@ -21,6 +21,7 @@ struct exp_stmt_node;
 struct if_stmt_node;
 struct if_else_stmt_node;
 struct while_stmt_node;
+struct goto_stmt_node;
 struct ret_stmt_node;
 
 struct exp_node;
@@ -35,9 +36,10 @@ using yylval_t = union {
 	op_t op;
 	data_t dtype;
 
-	vardef_node *decl;
-	arraydef_node *decl_arr;
-	funcdef_node *def;
+	node_basic *node;
+	vardef_node *vardef;
+	arraydef_node *arraydef;
+	funcdef_node *funcdef;
 
 	stmt_node *stmt;
 	assign_stmt_node *assign_stmt;
@@ -45,6 +47,7 @@ using yylval_t = union {
 	if_stmt_node *if_stmt;
 	if_else_stmt_node *if_else_stmt;
 	while_stmt_node *while_stmt;
+	goto_stmt_node *goto_stmt;
 	ret_stmt_node *ret_stmt;
 
 	exp_node *exp_basic;
@@ -173,6 +176,12 @@ struct while_stmt_node : public stmt_node {
 };
 // struct while_stmt_node end
 
+// struct goto_stmt_node begin
+struct goto_stmt_node : public stmt_node {
+	node_basic *&goto_ptr = ptr1; // where goto points
+};
+// struct goto_stmt_node end
+
 // struct ret_stmt_node begin
 struct ret_stmt_node : public stmt_node {
 	bool is_ret_val; // whether return a value
@@ -187,7 +196,8 @@ struct exp_node : public node_basic {
 	node_basic *&child = ptr1; // child expression - for array use
 	string sysy_name; // name of the expression in the sysy
 	string eeyore_name; // name of the expression in the eeyore
-
+	op_t op; // operation of the expression
+	int num; // number of the expression
 	exp_node(string _sysy_name = string(), node_basic *_child = nullptr);
 };
 // struct exp_node end
@@ -202,7 +212,6 @@ struct array_exp_node : public exp_node {
 
 // struct arith_exp_node begin
 struct arith_exp_node : public exp_node {
-	op_t op; // what operation?
 	node_basic *&left = ptr1; // left one, or operatee for unary
 	node_basic *&right = ptr2; // right one
 
@@ -212,7 +221,6 @@ struct arith_exp_node : public exp_node {
 
 // struct logic_exp_node begin
 struct logic_exp_node : public exp_node {
-	op_t op; // what operation?
 	node_basic *&left = ptr1; // left one
 	node_basic *&right = ptr2; // right one
 
