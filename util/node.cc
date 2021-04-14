@@ -1,4 +1,4 @@
-// utility functions for attributes
+// utility functions for nodes
 
 #include "include/node.hh"
 #ifdef DEBUG
