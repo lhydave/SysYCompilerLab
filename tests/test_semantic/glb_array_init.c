@@ -9,5 +9,3 @@ int h = {1, 2, 3, {4, 5}};
 int i[2][3];
 const int j[2];
 int k;
-int l[2] = {k, 2};
-int m = k;
