@@ -1,9 +1,9 @@
 LEX 		:= flex
 YACC 		:= bison
 CC 			:= g++
-CFLAGS 		:= -ll -ly -lm -O2 -Wall -std=c++11
+CFLAGS 		:= -ll -ly -lm -O2 -Wall -std=c++11 -D DEBUG
 TOP 		:= .
-INCLUDE 	:= util/node.cc main.cc
+INCLUDE 	:= util/node.cc util/symtab.cc main.cc
 YACCDEBUG	:= -v --report=all
 
 all: eeyore-parser

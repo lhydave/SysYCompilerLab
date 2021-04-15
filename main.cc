@@ -1,12 +1,19 @@
-#include<cstdio>
+#include "include/node.hh"
+#include "include/symtab.hh"
 #include "SysY.tab.hh"
-extern FILE* yyin;
+#include <cstdio>
+extern FILE *yyin;
 int yyparse(void);
 int yylex(void);
-int main(int argc, char** argv){
-    yyin = fopen(argv[1], "r");
-    do{
-        yyparse();
-    }while(!feof(yyin));
-    return 0;
+node_basic *root; // root of the parse tree
+int main(int argc, char **argv)
+{
+	yyin = fopen(argv[1], "r");
+	// initialize symbol tables
+	init_tables();
+	do
+	{
+		yyparse();
+	} while (!feof(yyin));
+	return 0;
 }
