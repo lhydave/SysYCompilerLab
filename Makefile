@@ -1,14 +1,14 @@
 LEX 		:= flex
 YACC 		:= bison
 CC 			:= g++
-CFLAGS 		:= -ll -ly -lm -O2 -Wall -std=c++11 -D DEBUG
+CFLAGS 		:= -ll -ly -lm -O0 -Wall -std=c++11 -g -D DEBUG
 TOP 		:= .
 INCLUDE 	:= util/node.cc util/symtab.cc main.cc
 YACCDEBUG	:= -v --report=all
 
 all: eeyore-parser
 
-eeyore-parser: eeyore-tab $(INCLUDE)
+eeyore-parser: eeyore-tab $(INCUDE)
 	$(CC) $(CFLAGS) -I$(TOP) SysY.tab.cc lex.yy.cc $(INCLUDE) -o parser.o
 
 eeyore-tab: eeyore-lex $(INCLUDE)
@@ -18,5 +18,6 @@ eeyore-lex: front/SysY.l
 	$(LEX) -o lex.yy.cc front/SysY.l
 
 clean:
-	rm -f *.o *.output
+	rm -f *.o *.output 
 	rm -f SysY.tab.cc lex.yy.cc SysY.tab.hh
+	rm -rf *.dSYM .vscode .VSCodeCounter

@@ -3,7 +3,6 @@
 #include "include/node.hh"
 #include "include/symtab.hh"
 #ifdef DEBUG
-#include <cassert>
 #define dbg_printf(...)      \
 	do                       \
 	{                        \
@@ -11,6 +10,8 @@
 		fflush(stdout);      \
 	} while (0);
 #else
+#undef assert
+#define assert(...)
 #define dbg_printf(...)
 #endif
 
@@ -98,6 +99,7 @@ int str2num(const char *s, int base)
 
 static int temp_id = 0; // temporary variable index
 bool is_cond = false; // is the expression in the cond ?
+static const int int_size = 4; // the size of int in eeyore
 
 // traverse the node and generate code
 string node_basic::traverse(node_basic *basic)
@@ -113,7 +115,7 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	is_pt = _is_pt;
 	first_dim = _first_dim;
 	set_shape();
-	is_array = (is_pt || dim.size() == 0);
+	is_array = (is_pt || dim.size() != 0);
 	first_val = _first_val;
 	if (!is_pt)
 	{
@@ -185,7 +187,7 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *_first_val)
 			valid_dim *= *i;
 		while (_first_val)
 		{
-			if (valid_dim * dim[0] < ret.size())
+			if (valid_dim * dim[0] <= ret.size())
 			{
 				yyerror("excess elements in array initializer");
 				ret.erase(ret.begin() + valid_dim * dim[0], ret.end());
@@ -250,17 +252,95 @@ string exp_node::new_temp()
 // reduce the expression to a simpler form
 void exp_node::reduce()
 {
-	if (exp_type == EXP_VAR)
+}
+
+array_exp_node::array_exp_node(exp_node *_first_dim, string _sysy_name) :
+	exp_node(EXP_ARRAY, _sysy_name, 0, NONE, _first_dim)
+{
+	var_entry query;
+	if (!find_var(sysy_name, query)) // not defined
 	{
-		var_entry query;
-		if (find_var(sysy_name, query))
+		string msg = "identifier '" + sysy_name + "' is not defined";
+		yyerror(msg.c_str());
+		return;
+	}
+	if (!query.is_array) // not an array
+	{
+		if (_first_dim) // should not be indexed!
 		{
-			if (query.is_const && !query.is_array)
-			{
-				exp_type = EXP_NUM;
-				num = query.val[0];
-			}
+			string msg = "identifier '" + sysy_name + "' is not an array";
+			yyerror(msg.c_str());
+			return;
 		}
+		exp_type = EXP_VAR;
+	}
+	else
+		while (_first_dim) // an array
+		{
+			assert(exp_type != EXP_INITVAL);
+			sysy_idx.push_back(_first_dim);
+			_first_dim = _first_dim->next;
+		}
+	reduce();
+}
+
+// generate the index expression for sysy index vector
+exp_node *array_exp_node::idx_open(const vector<exp_node *> &idx, size_t len)
+{
+	auto scale = new exp_node(EXP_NUM, string(), len);
+	auto ret = *idx.begin();
+	auto size = idx.size();
+	for (auto i = 1; i < size; i++)
+	{
+		ret = new arith_exp_node(MUL, ret, scale);
+		ret = new arith_exp_node(ADD, ret, idx[i]);
+	}
+	return ret;
+}
+
+// reduce to a eeyore form - variable, number, array or pointer
+void array_exp_node::reduce()
+{
+	var_entry query;
+	if (!find_var(sysy_name, query)) // not defined
+	{
+		string msg = "identifier '" + sysy_name + "' is not defined";
+		yyerror(msg.c_str());
+		return;
+	}
+	if (exp_type == EXP_VAR) // a variable
+	{
+		if (query.is_const) // a constant
+		{
+			exp_type = EXP_NUM;
+			num = query.val[0];
+		}
+		return;
+	}
+	// an array
+	if (sysy_idx.size() > query.dim.size()) // an error
+		yyerror("subscripted value is not an array");
+	else if (sysy_idx.size() == query.dim.size()) // an array
+	{
+		eeyore_exp = idx_open(sysy_idx, int_size);
+		eeyore_exp = new arith_exp_node(
+			MUL, eeyore_exp, new exp_node(EXP_NUM, string(), int_size));
+		auto array_id = new exp_node(EXP_VAR, sysy_name);
+		eeyore_exp = new arith_exp_node(LOAD, array_id, eeyore_exp);
+	}
+	else // a pointer
+	{
+		auto array_id = new exp_node(EXP_VAR, sysy_name);
+		exp_type = EXP_PTR;
+		int steplen = 4;
+		auto start_dim = query.dim.size() - sysy_idx.size();
+		auto dim_size = query.dim.size();
+		for (auto i = start_dim; i < dim_size; i++)
+			steplen *= query.dim[i];
+		eeyore_exp = idx_open(sysy_idx, int_size);
+		eeyore_exp = new arith_exp_node(
+			MUL, eeyore_exp, new exp_node(EXP_NUM, string(), steplen));
+		eeyore_exp = new arith_exp_node(ADD, array_id, eeyore_exp);
 	}
 }
 
@@ -268,18 +348,20 @@ arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 	exp_node(EXP_TEMP, string(), 0, _op), left(_left), right(_right)
 {
 	assert(op != NONE && op != AND && op != OR);
-	if (is_cond && op == NOT)
-		yyerror("operator '!' should appear only in condition");
+	if (!is_cond && op == NOT)
+		yyerror("operator '!' should only appear in condition");
+	if (left->exp_type == EXP_PTR || (right && right->exp_type == EXP_PTR))
+		yyerror("pointer cannot be in an expression");
 	reduce();
 }
 
 // reduce the expression to a simpler form, if can't, create a temp name
 void arith_exp_node::reduce()
 {
-	left->reduce();
+	assert(left->exp_type != EXP_INITVAL);
 	if (right) // binary operator
 	{
-		right->reduce();
+		assert(right->exp_type != EXP_INITVAL);
 		// can reduce!
 		if (left->exp_type == EXP_NUM && right->exp_type == EXP_NUM)
 		{

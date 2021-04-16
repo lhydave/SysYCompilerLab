@@ -1,7 +1,7 @@
-const int a[4] = {11, 22};
-const int b = {1};
+const int a[4] = {11, 2};
+const int b = 1;
 const int c[3][3] = {{}, {10}, 20, 30, 40};
-const int d[2][3][2] = {10, 20, 30, 40, 50, 60, {{1}, 1}};
+const int d[2][3][2] = {10, 20, 1, 40, 50, 60, {{1}, 1}};
 int e[2][3] = {1, 2, {3, 4, 5}};
 int f[2] = {1, {2}};
 int g[2] = {1, 2, 3, 4};
@@ -9,3 +9,6 @@ int h = {1, 2, 3, {4, 5}};
 int i[2][3];
 const int j[2];
 int k;
+int l[a[1]][b];
+int m[b + 2 * b];
+int n[!b + 11];

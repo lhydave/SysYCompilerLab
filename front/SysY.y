@@ -20,16 +20,11 @@ int yylex(void);
 %type <vardef> ConstDef VarDef FuncFParam
 %type <funcdef> FuncDef
 %type <stmt> Stmt
-%type <assign_stmt> AssignStmt
-%type <exp_stmt> ExpStmt
-%type <if_stmt> IfStmt
-%type <if_else_stmt> IfElseStmt
-%type <while_stmt> WhileStmt
-%type <goto_stmt> GotoStmt
-%type <ret_stmt> RetStmt
 %type <exp_basic> ConstArray ConstInitVal ConstInitVals InitVal InitVals Exp
                   Array PrimaryExp ConstExp UnaryExp LVal MulExp AddExp RelExp EqExp
-                  LOrExp LAndExp Cond FuncCall
+                  LOrExp LAndExp Cond
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 %%
 
 Code
@@ -82,7 +77,7 @@ VarDefs
     | VarDef ',' VarDefs  { $1->next = $3; $$ = $1; }
 VarDef
     : ID ConstArray '=' InitVal { $$=new vardef_node($1, 0, 0, $2, $4->child); }
-    | ID ConstArray { $$ = new vardef_node($1, 0, 0, $2, nullptr); dbg_printf("good!\n"); }
+    | ID ConstArray { $$ = new vardef_node($1, 0, 0, $2, nullptr); }
 InitVal
     : Exp   { $$ = new exp_node(EXP_INITVAL, string(), 0, NONE, $1); }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, string(), 0, NONE, $2); }
@@ -94,12 +89,12 @@ InitVals
     | InitVal ',' InitVals  { $1->next = $3; $$ = $1; }
 
 FuncDef
-    : DTYPE ID  '(' { inc_blk(); create = false; } FuncFParams ')'  Block   ;
-    | DTYPE ID '(' FuncFParams error { yyerror("expected ')'"); }
+    : DTYPE ID  '('  Minc_set FuncFParams ')'  Block   ;
+    | DTYPE ID '(' Minc_set FuncFParams error { yyerror("expected ')'"); }
 FuncFParams
-    : FuncFParam ',' FuncFParams    ;
-    | FuncFParam    ;
-    | ;
+    : FuncFParam ',' FuncFParams   { $1->next = $3; $$ = $1; }
+    | FuncFParam    { $$ = $1; }
+    | { $$ = nullptr; }
 FuncFParam
     : DTYPE ID '[' ']' ConstArray   ;
     | DTYPE ID  ;
@@ -108,77 +103,62 @@ FuncFParam
     | ID  { yyerror("missing type of parameter"); }
     | ID '[' ']' ConstArray { yyerror("missing type of parameter"); }
     | DTYPE error { yyerror("missing identifier of parameter"); }
-
+Minc_set: { inc_blk(); create = false; } ;
+Minc: { inc_blk(); } ;
 Block
-    : '{' { inc_blk(); } BlockItems { dec_blk(); } '}' ;
-    | '{' BlockItems error  { yyerror("expected '}'"); }
+    : '{' Minc BlockItems { dec_blk(); } '}' ;
+    | '{' Minc BlockItems error  { dec_blk(); yyerror("expected '}'"); }
 BlockItems
-    :  BlockItem BlockItems ;
-    |   ;
+    :  BlockItem BlockItems { $1->next = $2; $$ = $1; }
+    |   { $$ = nullptr; }
 BlockItem
-    : Decl  ;
-    | Stmt  ;
+    : Decl  { $$ = $1; }
+    | Stmt  { $$ = $1; }
 Stmt
-    : AssignStmt     ;
-    | ExpStmt   ;
-    | ';'       ;
-    | Block     ;
-    | IfStmt    ;
-    | IfElseStmt ;
-    | WhileStmt ;
-    | GotoStmt ;
-    | RetStmt ;
-    | BREAK error { yyerror("expected ';'"); }
-    | CONTINUE error { yyerror("expected ';'"); }
-AssignStmt
     : LVal '=' Exp  ';' ;
+    |   Exp ';' ;
+    |   ';' ;
+    | Block ;
+    | IF '(' Cond ')' Stmt %prec LOWER_THAN_ELSE;
+    | IF '(' Cond ')' Stmt ELSE Stmt ;
+    | WHILE '(' Cond ')' Stmt   ;
+    | BREAK ';' ;
+    | CONTINUE  ';' ;
+    | RETURN Exp  ';' ;
+    | RETURN ';' ;
     | LVal '=' error { yyerror("expected expression"); }
     | LVal '=' Exp error { yyerror("expected ';'"); }
-ExpStmt
-    :   Exp ';' ;
     | Exp error { yyerror("expected ';'"); }
-IfStmt
-    : IF '(' Cond ')' Stmt ;
     | IF '(' error ')' Stmt { yyerror("expected condition"); }
     | IF '(' Cond error Stmt { yyerror("expected ')'"); }
-IfElseStmt
-    : IF '(' Cond ')' Stmt ELSE Stmt ;
-WhileStmt
-    : WHILE '(' Cond ')' Stmt   ;
     | WHILE '(' error ')' Stmt { yyerror("expected condition"); }
     | WHILE '(' Cond error Stmt { yyerror("expected ')"); }
-GotoStmt
-    : BREAK ';' ;
-    | CONTINUE  ';' ;
-RetStmt
-    : RETURN Exp  ';' ;
-    | RETURN ';' ;
+    | BREAK error { yyerror("expected ';'"); }
+    | CONTINUE error { yyerror("expected ';'"); }
     
 Exp : AddExp    { $$ = $1; }
 Cond : { is_cond = true; } LOrExp { is_cond = false; }
-LVal : ID Array ;
+LVal : ID Array { $$ = new array_exp_node($2, $1); }
 Array
-    : '[' Exp ']'  Array ;
-    | ;
+    : '[' Exp ']'  Array { $2->next = $4; $$ = $2; }
+    | { $$ = nullptr; }
     | '[' Exp error Array { yyerror("expected ']'"); }
 PrimaryExp 
     : '(' Exp ')' { $$ = $2; }
-    | LVal  ;
+    | LVal  { $$ = $1; }
     | NUM   { $$= new exp_node(EXP_NUM, string(), $1); }
     | '(' Exp error { yyerror("expected ')'"); }
 UnaryExp
     : PrimaryExp    { $$ = $1; }
-    | FuncCall      ;
+    | ID '(' FuncRParams ')'   ;
     | '+' UnaryExp  { $$ = $2; }
     | '-' UnaryExp  { $$ = new arith_exp_node(NEGATE, $2); }
     | '!' UnaryExp  { $$ = new arith_exp_node(NOT, $2); }
-FuncCall
-    : ID '(' FuncRParams ')'   ;
     | ID '(' FuncRParams error   { yyerror("expected ')'"); }
 FuncRParams
-    : FuncRParams ',' Exp    ;
-    | Exp    ;
-    | ;
+    : FuncRParams ',' Exp    { $1->next = $3; $$ = $1; }
+    | Exp    { $$ = $1; }
+    | { $$ = nullptr; }
 MulExp
     : UnaryExp  { $$ = $1; }
     | MulExp '*' UnaryExp   { $$ = new arith_exp_node(MUL, $1, $3); }
@@ -199,13 +179,16 @@ EqExp
     | EqExp T_EQ RelExp  { $$ = new arith_exp_node(EQ, $1, $3); }
     | EqExp T_NE RelExp  { $$ = new arith_exp_node(NE, $1, $3); }
 LAndExp
-    : EqExp ;
+    : EqExp     { if( $1->exp_type == EXP_PTR) 
+                      yyerror("pointer should not be in expression");
+                  $$ = $1; }
     | LAndExp '&' EqExp ;
 LOrExp
-    : LAndExp   ;
+    : LAndExp   { if( $1->exp_type == EXP_PTR) 
+                      yyerror("pointer should not be in expression");
+                  $$ = $1; }
     | LOrExp '|' LAndExp ;
 ConstExp : AddExp   { if($1->exp_type != EXP_NUM)
                             yyerror("expression should be constant");
-                      $$ = $1;
-                    }
+                      $$ = $1; }
 %%

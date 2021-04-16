@@ -5,3 +5,4 @@ SysY.tab.cc
 SysY.tab.hh
 SysY.output
 .*
+*.dSYM

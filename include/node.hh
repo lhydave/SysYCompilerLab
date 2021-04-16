@@ -26,7 +26,8 @@ enum op_t {
 	MOD,
 	AND,
 	OR,
-	NOT
+	NOT,
+	LOAD
 };
 enum exp_t {
 	EXP_TEMP,
@@ -34,7 +35,8 @@ enum exp_t {
 	EXP_NUM,
 	EXP_FUNC_CALL,
 	EXP_ARRAY,
-	EXP_INITVAL
+	EXP_INITVAL,
+	EXP_PTR
 };
 struct node_basic;
 struct vardef_node;
@@ -64,21 +66,8 @@ using yylval_t = union {
 	node_basic *node;
 	vardef_node *vardef;
 	funcdef_node *funcdef;
-
 	stmt_node *stmt;
-	assign_stmt_node *assign_stmt;
-	exp_stmt_node *exp_stmt;
-	if_stmt_node *if_stmt;
-	if_else_stmt_node *if_else_stmt;
-	while_stmt_node *while_stmt;
-	goto_stmt_node *goto_stmt;
-	ret_stmt_node *ret_stmt;
-
 	exp_node *exp_basic;
-	array_exp_node *array_exp;
-	arith_exp_node *arith_exp;
-	logic_exp_node *logic_exp;
-	func_call_exp_node *func_call_exp;
 };
 #define YYSTYPE yylval_t
 
@@ -227,9 +216,12 @@ struct exp_node : public node_basic {
 
 // struct array_exp_node begin
 struct array_exp_node : public exp_node {
-	exp_node *first_dim; // first dimension expression
+	vector<exp_node *> sysy_idx; // index of the expression in sysy
+	exp_node *eeyore_exp; // expression in eeyore
 
-	array_exp_node(node_basic *_first_dim, string _sysy_name = string());
+	array_exp_node(exp_node *_first_dim, string _sysy_name = string());
+	static exp_node *idx_open(const vector<exp_node *> &idx, size_t len);
+	void reduce();
 };
 // struct array_exp_node end
 

@@ -3,7 +3,6 @@
 #include "include/symtab.hh"
 #include "include/node.hh"
 #ifdef DEBUG
-#include <cassert>
 #define dbg_printf(...)      \
 	do                       \
 	{                        \
@@ -11,6 +10,8 @@
 		fflush(stdout);      \
 	} while (0);
 #else
+#undef assert
+#define assert(...)
 #define dbg_printf(...)
 #endif
 
