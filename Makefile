@@ -1,8 +1,8 @@
 LEX 		:= flex
 YACC 		:= bison
 CC 			:= g++
-CFLAGS 		:= -ll -ly -lm -O2 -Wall -std=c++11
 CDEBUG		:= -g -D DEBUG
+CFLAGS 		:= -ll -ly -lm -O2 -Wall -std=c++11 #$(CDEBUG)
 TOP 		:= .
 INCLUDE 	:= util/node.cc util/symtab.cc main.cc
 YACCDEBUG	:= -v --report=all

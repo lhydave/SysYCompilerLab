@@ -15,14 +15,13 @@ int yylex(void);
 %token <num> NUM 
 %token <op> T_GE T_LE T_EQ T_NE
 %token <dtype> DTYPE
-%type <node> Code CompUnit Decl ConstDecl ConstDefs VarDecl VarDefs FuncFParams
-            Block BlockItems BlockItem FuncRParams
-%type <vardef> ConstDef VarDef FuncFParam
+%type <node> Code CompUnit Decl ConstDecl VarDecl Block BlockItems BlockItem 
+%type <vardef> ConstDefs ConstDef VarDef VarDefs FuncFParam FuncFParams
 %type <funcdef> FuncDef
 %type <stmt> Stmt
 %type <exp_basic> ConstArray ConstInitVal ConstInitVals InitVal InitVals Exp
                   Array PrimaryExp ConstExp UnaryExp LVal MulExp AddExp RelExp EqExp
-                  LOrExp LAndExp Cond
+                  LOrExp LAndExp Cond FuncRParams
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 %%
@@ -36,8 +35,8 @@ CompUnit
     | CompUnit Decl    { $1->next = $2; $$ = $1; }
     | CompUnit FuncDef { $1->next = $2; $$ = $1; }
 Decl
-    : ConstDecl { $$ = $1; }
-    | VarDecl { $$ = $1; }
+    : ConstDecl { $$ = new node_basic(); $$->child = $1; }
+    | VarDecl { $$ = new node_basic(); $$->child = $1; }
 ConstDecl : CONST DTYPE ConstDefs ';'  { if($2 != INT) yyerror("variable type must be int");
                                          $$ = $3;
                                         }
@@ -49,8 +48,8 @@ ConstDefs
     : ConstDef     { $$ = $1; }
     | ConstDef ',' ConstDefs { $1->next = $3; $$ = $1; }
 ConstDef
-    : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, $2, $4->child); }
-    | ID ConstArray  { $$ = new vardef_node($1, true, false, $2, nullptr); }
+    : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4->child); }
+    | ID ConstArray  { $$ = new vardef_node($1, true, false, false, $2, nullptr); }
 ConstArray
     : '[' ConstExp ']' ConstArray { $2->next = $4; $$ = $2; }
     |   { $$ = nullptr; }
@@ -76,8 +75,8 @@ VarDefs
     : VarDef    { $$ = $1; }
     | VarDef ',' VarDefs  { $1->next = $3; $$ = $1; }
 VarDef
-    : ID ConstArray '=' InitVal { $$=new vardef_node($1, 0, 0, $2, $4->child); }
-    | ID ConstArray { $$ = new vardef_node($1, 0, 0, $2, nullptr); }
+    : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
+    | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
 InitVal
     : Exp   { $$ = new exp_node(EXP_INITVAL, string(), 0, NONE, $1); }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, string(), 0, NONE, $2); }
@@ -89,21 +88,23 @@ InitVals
     | InitVal ',' InitVals  { $1->next = $3; $$ = $1; }
 
 FuncDef
-    : DTYPE ID  '('  Minc_set FuncFParams ')'  Block   ;
+    : DTYPE ID  '('  Minc_set FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7, $5); }
     | DTYPE ID '(' Minc_set FuncFParams error { yyerror("expected ')'"); }
 FuncFParams
     : FuncFParam ',' FuncFParams   { $1->next = $3; $$ = $1; }
     | FuncFParam    { $$ = $1; }
     | { $$ = nullptr; }
 FuncFParam
-    : DTYPE ID '[' ']' ConstArray   ;
-    | DTYPE ID  ;
+    : DTYPE ID '[' ']' ConstArray   { if($1 != INT) yyerror("variable type must be int"); 
+                                      $$ = new vardef_node($2, false, true, true, $5); }
+    | DTYPE ID  { if($1 != INT) yyerror("variable type must be int"); 
+                  $$ = new vardef_node($2, false, false, true); }
     | DTYPE ID '[' ConstExp ']' ConstArray { yyerror("the first dimension should be empty"); }
     | DTYPE ID '[' error ConstArray  { yyerror("expected ']'"); }
     | ID  { yyerror("missing type of parameter"); }
     | ID '[' ']' ConstArray { yyerror("missing type of parameter"); }
     | DTYPE error { yyerror("missing identifier of parameter"); }
-Minc_set: { inc_blk(); create = false; } ;
+Minc_set: { reg_func($<name>-1, $<dtype>-2); inc_blk(); create = false; } ;
 Minc: { inc_blk(); } ;
 Block
     : '{' Minc BlockItems { dec_blk(); } '}' ;

@@ -33,6 +33,12 @@ var_entry::var_entry(bool _is_array, bool _is_const, bool _is_param,
 	val = _val;
 }
 
+func_entry::func_entry(const string &sysy_name, data_t _ret_type)
+{
+	eeyore_name = "f_" + sysy_name;
+	ret_type = _ret_type;
+}
+
 // initialize the tables
 void init_tables()
 {
@@ -42,7 +48,7 @@ void init_tables()
 }
 
 // check if the variable is defined in current block
-bool defined(string &name)
+bool defined(const string &name)
 {
 	if (func_table.count(name))
 		return true;
@@ -67,11 +73,13 @@ void inc_blk()
 void dec_blk()
 {
 	blk_id--;
+	if (blk_id == 0)
+		func_name = "";
 	var_stack.pop_back();
 }
 
 // register a variable into the variable table
-void reg_var(string name, bool is_const, bool is_array, bool is_param,
+void reg_var(const string &name, bool is_const, bool is_array, bool is_param,
 	const vector<int> &dim, const vector<int> &val)
 {
 	assert(!name.empty());
@@ -79,7 +87,6 @@ void reg_var(string name, bool is_const, bool is_array, bool is_param,
 	{
 		string msg = "identifier '" + name + "' already defined";
 		yyerror(msg.c_str());
-		return;
 	}
 	var_entry new_entry(is_array, is_const, is_param, dim, val);
 	if (is_param)
@@ -88,14 +95,19 @@ void reg_var(string name, bool is_const, bool is_array, bool is_param,
 		new_entry.eeyore_name = "T" + to_string(var_id++);
 	else
 		new_entry.eeyore_name = name.substr(1);
-	if (blk_id)
-		func_table[func_name].decls.push_back(new_entry);
+	if (blk_id) // defined in the function!
+	{
+		assert(!func_name.empty());
+		func_table[func_name].func_var_table.push_back(new_entry);
+		if (is_param) // a parameter!
+			func_table[func_name].params.push_back(new_entry);
+	}
 	var_stack[blk_id][name] = new_entry;
 	return;
 }
 
 // find if variable exists and store the item
-bool find_var(string name, var_entry &store)
+bool find_var(const string &name, var_entry &store)
 {
 	for (int i = blk_id; i >= 0; i--)
 		if (var_stack[i].count(name))
@@ -107,10 +119,26 @@ bool find_var(string name, var_entry &store)
 }
 
 // find the variable if exists
-bool find_var(string name)
+bool find_var(const string &name)
 {
 	for (int i = blk_id; i >= 0; i--)
 		if (var_stack[i].count(name))
 			return true;
 	return false;
+}
+
+// register a function into function table
+void reg_func(const char *_name, data_t ret_type)
+{
+	dbg_printf("%s %d\n", _name, ret_type);
+	string name(_name);
+	assert(!name.empty());
+	if (defined(name))
+	{
+		string msg = "identifier '" + name + "' already defined";
+		yyerror(msg.c_str());
+		return;
+	}
+	func_table[name] = func_entry(name, ret_type);
+	func_name = name;
 }

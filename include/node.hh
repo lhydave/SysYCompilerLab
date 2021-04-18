@@ -88,6 +88,7 @@ int str2num(const char *s, int base);
 // struct node_basic begin
 struct node_basic {
 	node_basic *next = nullptr; // next node
+	node_basic *child = nullptr; // child node
 	string code; // code to eeyore
 	int lineno = yylineno; // line number of the node
 
@@ -97,6 +98,7 @@ struct node_basic {
 
 // struct vardef_node begin
 struct vardef_node : public node_basic {
+	vardef_node *next = nullptr;
 	string name; // name of the variable
 	bool is_const; // is it constant variable ?
 	bool is_global; // is it global variable ?
@@ -104,14 +106,14 @@ struct vardef_node : public node_basic {
 	vector<int> dim; // dim of the array
 	vector<exp_node *> val; // the values of array
 	bool is_pt; // true if it is pointer in the parameter
-	exp_node *first_dim; // first expression of dimension
-	exp_node *first_val; // first value of array
+	bool is_param; // true if it is parameter
 	int size; // size of the array in int
 
-	vardef_node(const char *_name, bool _is_const, bool _is_pt,
-		exp_node *_first_dim = nullptr, exp_node *_first_val = nullptr);
-	void set_shape();
-	static vector<exp_node *> set_val(vector<int> &dim, exp_node *_first_val);
+	vardef_node(const char *_name, bool _is_const = false, bool _is_pt = false,
+		bool _is_param = false, exp_node *_first_dim = nullptr,
+		exp_node *_first_val = nullptr);
+	void set_shape(exp_node *first_dim);
+	static vector<exp_node *> set_val(vector<int> &dim, exp_node *first_val);
 };
 // struct vardef_node end
 
@@ -120,10 +122,10 @@ struct funcdef_node : public node_basic {
 	string name; // name of the function
 	data_t ret_type; // return type
 	node_basic *blk; // definition body
-	node_basic *first_param; // first parameter
+	vector<vardef_node *> params; // parameters
 
 	funcdef_node(const char *_name, data_t _ret_type, node_basic *_blk,
-		node_basic *_first_param, node_basic *_next);
+		vardef_node *first_param);
 };
 // struct funcdef_node end
 
@@ -219,7 +221,7 @@ struct array_exp_node : public exp_node {
 	vector<exp_node *> sysy_idx; // index of the expression in sysy
 	exp_node *eeyore_exp; // expression in eeyore
 
-	array_exp_node(exp_node *_first_dim, string _sysy_name = string());
+	array_exp_node(exp_node *first_dim, string _sysy_name = string());
 	static exp_node *idx_open(const vector<exp_node *> &idx, size_t len);
 	void reduce();
 };

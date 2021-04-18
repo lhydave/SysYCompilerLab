@@ -108,15 +108,16 @@ string node_basic::traverse(node_basic *basic)
 }
 
 vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
-	exp_node *_first_dim, exp_node *_first_val)
+	bool _is_param, exp_node *first_dim, exp_node *first_val)
 {
 	name = string(_name);
+	dbg_printf("%s, ", _name);
 	is_const = _is_const;
 	is_pt = _is_pt;
-	first_dim = _first_dim;
-	set_shape();
-	is_array = (is_pt || dim.size() != 0);
-	first_val = _first_val;
+	is_param = _is_param;
+
+	set_shape(first_dim);
+	is_array = (dim.size() != 0);
 	if (!is_pt)
 	{
 		if (first_val) // has init val
@@ -135,13 +136,15 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 		dbg_printf("%d ", *int_val.rbegin());
 	}
 	dbg_printf("\n");
-	reg_var(name, is_const, is_array, is_pt, dim, int_val);
+	reg_var(name, is_const, is_array, is_param, dim, int_val);
 }
 
 // set the dim of array
-void vardef_node::set_shape()
+void vardef_node::set_shape(exp_node *first_dim)
 {
 	size = 1;
+	if (is_pt)
+		dim.push_back(0);
 	while (first_dim)
 	{
 		size_t temp = first_dim->num;
@@ -157,13 +160,13 @@ void vardef_node::set_shape()
 }
 
 // set the values of array
-vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *_first_val)
+vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *first_val)
 {
 	exp_node *zero = new exp_node(EXP_NUM, string(), 0);
 	vector<exp_node *> ret;
 	if (dim.size() == 0) // a value !
 	{
-		if (!_first_val || _first_val->exp_type == EXP_INITVAL)
+		if (!first_val || first_val->exp_type == EXP_INITVAL)
 		{
 			yyerror("expected expression");
 			ret.push_back(zero);
@@ -171,13 +174,13 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *_first_val)
 		else
 		{
 			// global variable
-			if (blk_id == 0 && _first_val->exp_type != EXP_NUM)
+			if (blk_id == 0 && first_val->exp_type != EXP_NUM)
 			{
 				yyerror("global initializer must be constant");
 				ret.push_back(zero);
 			}
 			else
-				ret.push_back(_first_val);
+				ret.push_back(first_val);
 		}
 	}
 	else // an array
@@ -185,7 +188,7 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *_first_val)
 		int valid_dim = 1;
 		for (auto i = dim.begin() + 1; i != dim.end(); i++)
 			valid_dim *= *i;
-		while (_first_val)
+		while (first_val)
 		{
 			if (valid_dim * dim[0] <= ret.size())
 			{
@@ -193,18 +196,18 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *_first_val)
 				ret.erase(ret.begin() + valid_dim * dim[0], ret.end());
 				return ret;
 			}
-			if (_first_val->child) // preorder, child first
+			if (first_val->child) // preorder, child first
 			{
-				if (_first_val->child->exp_type != EXP_INITVAL) // an expression
+				if (first_val->child->exp_type != EXP_INITVAL) // an expression
 				{
 					// global variable
-					if (blk_id == 0 && _first_val->child->exp_type != EXP_NUM)
+					if (blk_id == 0 && first_val->child->exp_type != EXP_NUM)
 					{
 						yyerror("global initializer must be constant");
 						ret.push_back(zero);
 					}
 					else
-						ret.push_back(_first_val->child);
+						ret.push_back(first_val->child);
 				}
 				else
 				{
@@ -217,17 +220,30 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *_first_val)
 					}
 					vector<int> new_shape(dim);
 					new_shape.erase(new_shape.begin());
-					auto temp = set_val(new_shape, _first_val->child);
+					auto temp = set_val(new_shape, first_val->child);
 					ret.insert(ret.end(), temp.begin(), temp.end());
 				}
 			} // if end
 			else // an empty brace
 				ret.insert(ret.end(), valid_dim, zero);
-			_first_val = _first_val->next;
+			first_val = first_val->next;
 		} // while end
 		ret.insert(ret.end(), valid_dim * dim[0] - ret.size(), zero);
 	} // else end
 	return ret;
+}
+
+funcdef_node::funcdef_node(const char *_name, data_t _ret_type,
+	node_basic *_blk, vardef_node *first_param)
+{
+	blk = _blk;
+	name = string(_name);
+	ret_type = _ret_type;
+	while (first_param)
+	{
+		params.push_back(first_param);
+		first_param = first_param->next;
+	}
 }
 
 exp_node::exp_node(
@@ -254,8 +270,8 @@ void exp_node::reduce()
 {
 }
 
-array_exp_node::array_exp_node(exp_node *_first_dim, string _sysy_name) :
-	exp_node(EXP_ARRAY, _sysy_name, 0, NONE, _first_dim)
+array_exp_node::array_exp_node(exp_node *first_dim, string _sysy_name) :
+	exp_node(EXP_ARRAY, _sysy_name, 0, NONE, first_dim)
 {
 	var_entry query;
 	if (!find_var(sysy_name, query)) // not defined
@@ -266,7 +282,7 @@ array_exp_node::array_exp_node(exp_node *_first_dim, string _sysy_name) :
 	}
 	if (!query.is_array) // not an array
 	{
-		if (_first_dim) // should not be indexed!
+		if (first_dim) // should not be indexed!
 		{
 			string msg = "identifier '" + sysy_name + "' is not an array";
 			yyerror(msg.c_str());
@@ -275,11 +291,11 @@ array_exp_node::array_exp_node(exp_node *_first_dim, string _sysy_name) :
 		exp_type = EXP_VAR;
 	}
 	else
-		while (_first_dim) // an array
+		while (first_dim) // an array
 		{
 			assert(exp_type != EXP_INITVAL);
-			sysy_idx.push_back(_first_dim);
-			_first_dim = _first_dim->next;
+			sysy_idx.push_back(first_dim);
+			first_dim = first_dim->next;
 		}
 	reduce();
 }

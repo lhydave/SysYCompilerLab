@@ -1,6 +1,7 @@
 /* symbol table attributes */
 #ifndef __SYMTAB_H__
 #define __SYMTAB_H__
+#include "include/node.hh"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,7 +16,6 @@ using func_table_t = unordered_map<string, func_entry>;
 // struct var_entry begin
 struct var_entry {
 	string eeyore_name; // name in eeyore
-
 	bool is_array; // true if the symbol is an array
 	bool is_const; // true if the symbol is constant
 	bool is_param; // true if the symbol is a parameter
@@ -31,10 +31,12 @@ struct var_entry {
 // struct func_entry begin
 struct func_entry {
 	string eeyore_name; // name in eeyore
-	string sysy_name; // name in sysy
-	vector<vector<int>> params; // parameter shapes
-	vector<var_entry> decls; // all declarations in the function
-	var_table_t func_var_table; // variable table for the function
+	vector<var_entry> params; // all parameters in the function
+	vector<var_entry> func_var_table; // variable table for the function
+	data_t ret_type;
+
+	func_entry() = default;
+	func_entry(const string &sysy_name, data_t _ret_type);
 };
 // struct func_entry end
 
@@ -49,18 +51,16 @@ void dec_blk();
 
 void init_tables();
 
-bool defined(string &name);
-void reg_var(string name, bool is_const = false, bool is_array = false,
+bool defined(const string &name);
+void reg_var(const string &name, bool is_const = false, bool is_array = false,
 	bool is_param = false, const vector<int> &dim = vector<int>(),
 	const vector<int> &val = vector<int>());
-bool find_var(string name, var_entry &store);
-bool find_var(string name);
+bool find_var(const string &name, var_entry &store);
+bool find_var(const string &name);
 
+void reg_func(const char *_name, data_t ret_type);
 
-void reg_func(
-	string name, const vector<vector<int>> &params = vector<vector<int>>());
-
-bool find_func(string name, func_entry &store);
-bool find_func(string name);
+bool find_func(const string &name, func_entry &store);
+bool find_func(const string &name);
 
 #endif // __SYMTAB_H__ end
