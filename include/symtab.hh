@@ -16,6 +16,7 @@ using func_table_t = unordered_map<string, func_entry>;
 // struct var_entry begin
 struct var_entry {
 	string eeyore_name; // name in eeyore
+	string sysy_name; // name in sysy
 	bool is_array; // true if the symbol is an array
 	bool is_const; // true if the symbol is constant
 	bool is_param; // true if the symbol is a parameter
@@ -24,7 +25,8 @@ struct var_entry {
 
 	var_entry() = default;
 	var_entry(bool _is_array, bool _is_const, bool _is_param,
-		const vector<int> &_dim, const vector<int> &_val = vector<int>());
+		const vector<int> &_dim, const vector<int> &_val = vector<int>(),
+		const string &_sysy_name = string());
 };
 // struct var_entry end
 

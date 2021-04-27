@@ -9,7 +9,7 @@
 using std::string;
 using std::to_string;
 using std::vector;
-enum data_t { VOID, CONST_INT, INT };
+enum data_t { VOID, INT };
 enum op_t {
 	NONE,
 	EQ,
@@ -92,7 +92,8 @@ struct node_basic {
 	string code; // code to eeyore
 	int lineno = yylineno; // line number of the node
 
-	virtual string traverse(node_basic *parent);
+	virtual void traverse(node_basic *parent);
+	virtual void set_next(node_basic *_next);
 };
 // struct node_basic end
 
@@ -126,62 +127,59 @@ struct funcdef_node : public node_basic {
 
 	funcdef_node(const char *_name, data_t _ret_type, node_basic *_blk,
 		vardef_node *first_param);
+	void add_ret();
 };
 // struct funcdef_node end
 
 // struct stmt_node begin
 struct stmt_node : public node_basic {
-	string label; // label of the statement
-
-	stmt_node(node_basic *_next);
 };
 // struct stmt_node end
 
 // struct assign_stmt_node begin
 struct assign_stmt_node : public stmt_node {
-	node_basic *lval; // left variable
-	node_basic *assign_exp; // right assignment
+	exp_node *lval; // left variable
+	exp_node *assign_exp; // right assignment
 
-	assign_stmt_node(
-		node_basic *_next, node_basic *_lval, node_basic *_assign_exp);
+	assign_stmt_node(exp_node *_lval, exp_node *_assign_exp);
 };
 // struct assign_stmt_node end
 
 // struct exp_stmt_node begin
 struct exp_stmt_node : public stmt_node {
-	node_basic *exp_stmt; // expression statement
+	exp_node *exp_stmt; // expression statement
 
-	exp_stmt_node(node_basic *_next, node_basic *_exp_stmt);
+	exp_stmt_node(exp_node *_exp_stmt);
 };
 // struct exp_stmt_node end
 
 // struct if_stmt_node begin
 struct if_stmt_node : public stmt_node {
-	node_basic *cond; // condition
+	exp_node *cond; // condition
 	node_basic *true_stmt; // true statement
 
-	if_stmt_node(node_basic *_cond, node_basic *_true_stmt, node_basic *_next);
+	if_stmt_node(exp_node *_cond, node_basic *_true_stmt);
 };
 // struct if_stmt_node end
 
 // struct if_else_stmt begin
 struct if_else_stmt_node : public stmt_node {
-	node_basic *cond; // condition
+	exp_node *cond; // condition
 	node_basic *true_stmt; // true statement
 	node_basic *false_stmt; // false statement
 
-	if_else_stmt_node(node_basic *_cond, node_basic *_true_stmt,
-		node_basic *_false_stmt, node_basic *_next);
+	if_else_stmt_node(exp_node *_cond, node_basic *_true_stmt,
+		node_basic *_false_stmt);
 };
 // struct if_else_stmt end
 
 // struct while_stmt_node begin
 struct while_stmt_node : public stmt_node {
-	node_basic *cond; // condition
+	exp_node *cond; // condition
 	node_basic *true_stmt; // true statement
 
 	while_stmt_node(
-		node_basic *_cond, node_basic *_true_stmt, node_basic *_next);
+		exp_node *_cond, node_basic *_true_stmt, node_basic *_next);
 };
 // struct while_stmt_node end
 
@@ -194,9 +192,9 @@ struct goto_stmt_node : public stmt_node {
 // struct ret_stmt_node begin
 struct ret_stmt_node : public stmt_node {
 	bool is_ret_val; // whether return a value
-	node_basic *ret_val; // return value
+	exp_node *ret_val; // return value
 
-	ret_stmt_node(bool _is_ret_val, node_basic *_ret_val);
+	ret_stmt_node(bool _is_ret_val, exp_node *_ret_val);
 };
 // struct ret_stmt_node end
 
@@ -206,13 +204,14 @@ struct exp_node : public node_basic {
 	exp_node *child; // child expression - for array use
 	string sysy_name; // name of the expression in the sysy
 	op_t op = NONE; // operation of the expression
-	int num = -1; // number of the expression
+	int num = 0; // number of the expression
 	exp_t exp_type;
 
 	exp_node(exp_t _exp_type, string _sysy_name = string(), int _num = 0,
 		op_t _op = NONE, exp_node *_child = nullptr);
-	static string new_temp();
-	virtual void reduce();
+	virtual void new_temp();
+	virtual void reduce(bool alloc);
+	void set_next(node_basic *_next);
 };
 // struct exp_node end
 
@@ -220,10 +219,11 @@ struct exp_node : public node_basic {
 struct array_exp_node : public exp_node {
 	vector<exp_node *> sysy_idx; // index of the expression in sysy
 	exp_node *eeyore_exp; // expression in eeyore
+	string sysy_array_name; // name of the array in sysy
 
 	array_exp_node(exp_node *first_dim, string _sysy_name = string());
 	static exp_node *idx_open(const vector<exp_node *> &idx, size_t len);
-	void reduce();
+	void reduce(bool alloc);
 };
 // struct array_exp_node end
 
@@ -233,7 +233,7 @@ struct arith_exp_node : public exp_node {
 	exp_node *right; // right one
 
 	arith_exp_node(op_t _op, exp_node *_left, exp_node *_right = nullptr);
-	void reduce();
+	void reduce(bool alloc);
 };
 // struct array_exp_node end
 
@@ -248,10 +248,14 @@ struct logic_exp_node : public exp_node {
 
 // struct func_call_exp_node begin
 struct func_call_exp_node : public exp_node {
-	string func_name;
-	node_basic *first_param; // first parameter
+	vector<exp_node *> params; // real parameters
+	string sysy_func_name; // name of the function in sysy
 
-	func_call_exp_node(string _func_name, node_basic *_first_param = nullptr);
+	func_call_exp_node(const string& func_name, exp_node *first_param = nullptr);
+	void check_valid();
+	static void check_ret_type(exp_node *func_exp);
+	void reduce(bool alloc);
+	void new_temp();
 };
 // struct func_call_exp end
 #endif // define __ATTR_H__ end

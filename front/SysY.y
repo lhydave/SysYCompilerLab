@@ -15,8 +15,8 @@ int yylex(void);
 %token <num> NUM 
 %token <op> T_GE T_LE T_EQ T_NE
 %token <dtype> DTYPE
-%type <node> Code CompUnit Decl ConstDecl VarDecl Block BlockItems BlockItem 
-%type <vardef> ConstDefs ConstDef VarDef VarDefs FuncFParam FuncFParams
+%type <node> Code CompUnit Block BlockItems BlockItem 
+%type <vardef> ConstDefs ConstDef VarDef VarDefs FuncFParam FuncFParams Decl ConstDecl VarDecl
 %type <funcdef> FuncDef
 %type <stmt> Stmt
 %type <exp_basic> ConstArray ConstInitVal ConstInitVals InitVal InitVals Exp
@@ -30,13 +30,13 @@ Code
     : CompUnit  { root = $$ = $1; }
 
 CompUnit
-    : Decl  { $$ = $1; }
+    : Decl  { $$ = new node_basic(); $$->child = $1; $$->code = $1->code; }
     | FuncDef   { $$ = $1; }
-    | CompUnit Decl    { $1->next = $2; $$ = $1; }
-    | CompUnit FuncDef { $1->next = $2; $$ = $1; }
+    | CompUnit Decl    { $1->set_next($2); $$ = $1; }
+    | CompUnit FuncDef { $1->set_next($2); $$ = $1; }
 Decl
-    : ConstDecl { $$ = new node_basic(); $$->child = $1; }
-    | VarDecl { $$ = new node_basic(); $$->child = $1; }
+    : ConstDecl { $$ = $1;}
+    | VarDecl { $$ = $1; }
 ConstDecl : CONST DTYPE ConstDefs ';'  { if($2 != INT) yyerror("variable type must be int");
                                          $$ = $3;
                                         }
@@ -46,12 +46,13 @@ ConstDecl : CONST DTYPE ConstDefs ';'  { if($2 != INT) yyerror("variable type mu
     | CONST DTYPE error ';' { yyerror("invalid symbols among declarations");}
 ConstDefs
     : ConstDef     { $$ = $1; }
-    | ConstDef ',' ConstDefs { $1->next = $3; $$ = $1; }
+    | ConstDef ',' ConstDefs { $1->set_next($3); $$ = $1; }
 ConstDef
     : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4->child); }
-    | ID ConstArray  { $$ = new vardef_node($1, true, false, false, $2, nullptr); }
+    | ID ConstArray  { yyerror("constant expression must be initialized.");
+                       $$ = new vardef_node($1, true, false, false, $2, nullptr); }
 ConstArray
-    : '[' ConstExp ']' ConstArray { $2->next = $4; $$ = $2; }
+    : '[' ConstExp ']' ConstArray { $2->set_next($4); $$ = $2; }
     |   { $$ = nullptr; }
     | '[' ConstExp error ConstArray { yyerror("expected ']'"); }
     | '[' error ']' ConstArray { yyerror("array size in delaration must be constant"); }
@@ -63,7 +64,7 @@ ConstInitVal
     | error { yyerror("expected constant expression"); }
 ConstInitVals
     : ConstInitVal  { $$ = $1; }
-    | ConstInitVal ',' ConstInitVals  { $1->next = $3; $$ = $1; }
+    | ConstInitVal ',' ConstInitVals  { $1->set_next($3); $$ = $1; }
 
 VarDecl : DTYPE VarDefs ';'    { if($1 != INT) yyerror("variable type must be int");
                                  $$ = $2;
@@ -73,7 +74,7 @@ VarDecl : DTYPE VarDefs ';'    { if($1 != INT) yyerror("variable type must be in
     | DTYPE error ';' { yyerror("invalid symbols among declarations"); yyerrok; }
 VarDefs
     : VarDef    { $$ = $1; }
-    | VarDef ',' VarDefs  { $1->next = $3; $$ = $1; }
+    | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; }
 VarDef
     : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
     | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
@@ -85,13 +86,13 @@ InitVal
     | '{' error { yyerror("expected '}'"); }
 InitVals
     : InitVal   { $$ = $1; }
-    | InitVal ',' InitVals  { $1->next = $3; $$ = $1; }
+    | InitVal ',' InitVals  { $1->set_next($3); $$ = $1; }
 
 FuncDef
-    : DTYPE ID  '('  Minc_set FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7, $5); }
-    | DTYPE ID '(' Minc_set FuncFParams error { yyerror("expected ')'"); }
+    : DTYPE ID  '('  Minc_func FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7, $5); }
+    | DTYPE ID '(' Minc_func FuncFParams error { yyerror("expected ')'"); }
 FuncFParams
-    : FuncFParam ',' FuncFParams   { $1->next = $3; $$ = $1; }
+    : FuncFParam ',' FuncFParams   { $1->set_next($3); $$ = $1; }
     | FuncFParam    { $$ = $1; }
     | { $$ = nullptr; }
 FuncFParam
@@ -104,13 +105,13 @@ FuncFParam
     | ID  { yyerror("missing type of parameter"); }
     | ID '[' ']' ConstArray { yyerror("missing type of parameter"); }
     | DTYPE error { yyerror("missing identifier of parameter"); }
-Minc_set: { reg_func($<name>-1, $<dtype>-2); inc_blk(); create = false; } ;
+Minc_func: { reg_func($<name>-1, $<dtype>-2); inc_blk(); create = false; } ;
 Minc: { inc_blk(); } ;
 Block
     : '{' Minc BlockItems { dec_blk(); } '}' ;
     | '{' Minc BlockItems error  { dec_blk(); yyerror("expected '}'"); }
 BlockItems
-    :  BlockItem BlockItems { $1->next = $2; $$ = $1; }
+    :  BlockItem BlockItems { $1->set_next($2); $$ = $1; }
     |   { $$ = nullptr; }
 BlockItem
     : Decl  { $$ = $1; }
@@ -141,7 +142,7 @@ Exp : AddExp    { $$ = $1; }
 Cond : { is_cond = true; } LOrExp { is_cond = false; }
 LVal : ID Array { $$ = new array_exp_node($2, $1); }
 Array
-    : '[' Exp ']'  Array { $2->next = $4; $$ = $2; }
+    : '[' Exp ']'  Array { $2->set_next($4); $$ = $2; }
     | { $$ = nullptr; }
     | '[' Exp error Array { yyerror("expected ']'"); }
 PrimaryExp 
@@ -151,13 +152,13 @@ PrimaryExp
     | '(' Exp error { yyerror("expected ')'"); }
 UnaryExp
     : PrimaryExp    { $$ = $1; }
-    | ID '(' FuncRParams ')'   ;
+    | ID '(' FuncRParams ')'   { $$ = new func_call_exp_node($1, $3); }
     | '+' UnaryExp  { $$ = $2; }
     | '-' UnaryExp  { $$ = new arith_exp_node(NEGATE, $2); }
     | '!' UnaryExp  { $$ = new arith_exp_node(NOT, $2); }
     | ID '(' FuncRParams error   { yyerror("expected ')'"); }
 FuncRParams
-    : FuncRParams ',' Exp    { $1->next = $3; $$ = $1; }
+    : Exp  ',' FuncRParams  { $1->set_next($3); $$ = $1; }
     | Exp    { $$ = $1; }
     | { $$ = nullptr; }
 MulExp
@@ -189,7 +190,8 @@ LOrExp
                       yyerror("pointer should not be in expression");
                   $$ = $1; }
     | LOrExp '|' LAndExp ;
-ConstExp : AddExp   { if($1->exp_type != EXP_NUM)
-                            yyerror("expression should be constant");
+ConstExp : AddExp   { $1->reduce(false);
+                      if($1->exp_type != EXP_NUM)
+                          yyerror("expression should be constant");
                       $$ = $1; }
 %%

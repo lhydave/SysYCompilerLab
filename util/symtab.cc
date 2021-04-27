@@ -24,11 +24,12 @@ static int var_id = 0; // index of current variable
 static int param_id = 0; // index of current parameter
 
 var_entry::var_entry(bool _is_array, bool _is_const, bool _is_param,
-	const vector<int> &_dim, const vector<int> &_val)
+	const vector<int> &_dim, const vector<int> &_val, const string &_sysy_name)
 {
 	is_array = _is_array;
 	is_const = _is_const;
 	is_param = _is_param;
+	sysy_name = _sysy_name;
 	dim = _dim;
 	val = _val;
 }
@@ -85,10 +86,10 @@ void reg_var(const string &name, bool is_const, bool is_array, bool is_param,
 	assert(!name.empty());
 	if (defined(name))
 	{
-		string msg = "identifier '" + name + "' already defined";
+		string msg = "identifier '" + name + "' was already defined";
 		yyerror(msg.c_str());
 	}
-	var_entry new_entry(is_array, is_const, is_param, dim, val);
+	var_entry new_entry(is_array, is_const, is_param, dim, val, name);
 	if (is_param)
 		new_entry.eeyore_name = "p" + to_string(param_id++);
 	else if (name[0] != '#')
@@ -130,15 +131,30 @@ bool find_var(const string &name)
 // register a function into function table
 void reg_func(const char *_name, data_t ret_type)
 {
-	dbg_printf("%s %d\n", _name, ret_type);
+	dbg_printf("%s return int: %d\n", _name, ret_type==INT);
 	string name(_name);
 	assert(!name.empty());
 	if (defined(name))
 	{
-		string msg = "identifier '" + name + "' already defined";
+		string msg = "identifier '" + name + "' was already defined";
 		yyerror(msg.c_str());
 		return;
 	}
 	func_table[name] = func_entry(name, ret_type);
 	func_name = name;
+}
+
+// find if function exists and store the item
+bool find_func(const string &name, func_entry &store)
+{
+	if (func_table.count(name) == 0)
+		return false;
+	store = func_table[name];
+	return true;
+}
+
+// find if function exists
+bool find_func(const string &name)
+{
+	return func_table.count(name) != 0;
 }
