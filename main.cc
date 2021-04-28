@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	{
 		yyparse();
 	} while (!feof(yyin));
+	check_main();
 	if (!has_err) // good!
 		fprintf(gen_out, "%s", root->code.c_str());
 	return 0;
