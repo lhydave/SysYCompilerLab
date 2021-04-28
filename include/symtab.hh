@@ -26,7 +26,7 @@ struct var_entry {
 	var_entry() = default;
 	var_entry(bool _is_array, bool _is_const, bool _is_param,
 		const vector<int> &_dim, const vector<int> &_val = vector<int>(),
-		const string &_sysy_name = string());
+		const string &_sysy_name = "");
 };
 // struct var_entry end
 
@@ -64,5 +64,6 @@ void reg_func(const char *_name, data_t ret_type);
 
 bool find_func(const string &name, func_entry &store);
 bool find_func(const string &name);
+bool check_main();
 
 #endif // __SYMTAB_H__ end

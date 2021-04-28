@@ -46,6 +46,38 @@ void init_tables()
 	var_stack.clear();
 	func_table.clear();
 	var_stack.push_back(var_table_t());
+
+	// register system functions
+	reg_func("getint", INT);
+
+	reg_func("getch", INT);
+
+	reg_func("getarray", INT);
+	auto temp = var_entry(true, false, true, vector<int>(1, 0));
+	temp.sysy_name = "p0";
+	func_table["getarray"].params.push_back(temp);
+
+	reg_func("putint", VOID);
+	temp = var_entry(false, false, true, vector<int>());
+	func_table["putint"].params.push_back(temp);
+
+	reg_func("putchar", VOID);
+	temp = var_entry(false, false, true, vector<int>());
+	func_table["putchar"].params.push_back(temp);
+
+	reg_func("putarray", VOID);
+	temp = var_entry(false, false, true, vector<int>());
+	func_table["putarray"].params.push_back(temp);
+	temp = var_entry(true, false, true, vector<int>(1, 0));
+	func_table["putarray"].params.push_back(temp);
+
+	reg_func("_sysy_starttime", VOID);
+	temp = var_entry(false, false, true, vector<int>());
+	func_table["_sysy_starttime"].params.push_back(temp);
+
+	reg_func("_sysy_stoptime", VOID);
+	temp = var_entry(false, false, true, vector<int>());
+	func_table["_sysy_stoptime"].params.push_back(temp);
 }
 
 // check if the variable is defined in current block
@@ -131,7 +163,7 @@ bool find_var(const string &name)
 // register a function into function table
 void reg_func(const char *_name, data_t ret_type)
 {
-	dbg_printf("%s return int: %d\n", _name, ret_type==INT);
+	dbg_printf("%s return int: %d\n", _name, ret_type == INT);
 	string name(_name);
 	assert(!name.empty());
 	if (defined(name))
@@ -157,4 +189,27 @@ bool find_func(const string &name, func_entry &store)
 bool find_func(const string &name)
 {
 	return func_table.count(name) != 0;
+}
+
+// check whether the main function is valid
+bool check_main()
+{
+	bool valid = true;
+	func_entry query;
+	if (!find_func("main", query))
+	{
+		yyerror("function 'main' should be defined");
+		valid = false;
+	}
+	else if (query.ret_type != INT)
+	{
+		yyerror("function 'main' should return 'int'");
+		valid = false;
+	}
+	else if (query.params.size() != 0)
+	{
+		yyerror("function 'main' should not have parameter");
+		valid = false;
+	}
+	return valid;
 }
