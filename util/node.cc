@@ -110,7 +110,7 @@ static int fall_label; // fall labels
 static int while_next_label; // false label
 static int while_start_label; // start label only for while
 
-static string gen_vardecl(const var_entry &func);
+static string gen_vardecl(const var_entry &func, bool indent);
 static void check_single(
 	exp_node *RParam, const var_entry &FParam, const string &func_name);
 
@@ -140,6 +140,7 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 
 	set_shape(first_dim);
 	is_array = (dim.size() != 0);
+	dbg_printf("is_array: %d\n", is_array);
 	if (!is_pt && first_val)
 		val = set_val(dim, first_val);
 	vector<int> int_val;
@@ -161,7 +162,7 @@ void vardef_node::set_shape(exp_node *first_dim)
 		dim.push_back(0);
 	while (first_dim)
 	{
-		first_dim->reduce(true);
+		first_dim->reduce();
 		size_t temp = first_dim->num;
 		if (first_dim->exp_type != EXP_NUM || first_dim->num <= 0)
 		{
@@ -182,15 +183,23 @@ void vardef_node::gen_code()
 	var_entry query;
 	find_var(name, query);
 	if (blk_id == 0) // only declare global variables
-		code = gen_vardecl(query);
+		code = gen_vardecl(query, false);
 	else if (!val.empty()) // generate initial values
 	{
 		if (!is_array) // variable
-			code = "\t" + query.eeyore_name + " = " + val[0]->code + "\n";
+		{
+			code += val[0]->code;
+			code +=
+				"\t" + query.eeyore_name + " = " + val[0]->eeyore_name + "\n";
+		}
 		else // an array
 			for (auto i = 0; i < val.size(); i++)
+			{
+				code += val[i]->code;
 				code += "\t" + query.eeyore_name + "[" +
-					to_string(i * int_size) + "] = " + val[i]->code + "\n";
+					to_string(i * int_size) + "] = " + val[i]->eeyore_name +
+					"\n";
+			}
 	}
 }
 
@@ -216,7 +225,7 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *first_val)
 			}
 			else
 			{
-				first_val->reduce(true);
+				first_val->reduce();
 				ret.push_back(first_val);
 			}
 		}
@@ -276,6 +285,7 @@ funcdef_node::funcdef_node(const char *_name, data_t _ret_type,
 {
 	blk = _blk;
 	name = string(_name);
+	dbg_printf("def a func named %s\n", _name);
 	ret_type = _ret_type;
 	while (first_param)
 	{
@@ -289,25 +299,25 @@ funcdef_node::funcdef_node(const char *_name, data_t _ret_type,
 // always add an return statement at the end of the funcdef
 void funcdef_node::add_ret(bool is_append)
 {
-	auto has_ret_val = func_table[func_name].ret_type == INT;
+	dbg_printf("add ret is_append: %d\n", is_append);
+	now_func_name = name;
+	auto has_ret_val = (func_table[name].ret_type == INT);
 	ret_stmt_node *ret_stmt;
 	if (has_ret_val)
 		ret_stmt = new ret_stmt_node(new exp_node(EXP_NUM, "", 0));
 	else
 		ret_stmt = new ret_stmt_node(nullptr);
 	if (is_append)
-	{
 		last_stmt->set_next(ret_stmt);
-		blk->code += ret_stmt->code;
-	}
 	else
 		blk = ret_stmt;
+	now_func_name = "";
 }
 
 // generate declaration of variable
-static string gen_vardecl(const var_entry &var)
+static string gen_vardecl(const var_entry &var, bool indent)
 {
-	string prefix = blk_id ? "\t" : "";
+	string prefix = indent ? "\t" : "";
 	if (var.is_param) // parameters
 		return "";
 	if (!var.is_array) // variable
@@ -315,7 +325,7 @@ static string gen_vardecl(const var_entry &var)
 	else // array
 	{
 		auto size = std::accumulate(
-			var.dim.begin(), var.dim.end(), 1, std::multiplies<int>());
+			var.dim.begin(), var.dim.end(), int_size, std::multiplies<int>());
 		return prefix + "var " + to_string(size) + " " + var.eeyore_name + "\n";
 	}
 }
@@ -323,12 +333,12 @@ static string gen_vardecl(const var_entry &var)
 // generate code for function definition
 void funcdef_node::gen_code()
 {
-	code = "f_" + name + "\n";
+	code = "f_" + name + +" [" + to_string(params.size()) + "]\n";
 	func_entry query;
 	find_func(name, query);
 	// declarations
 	for (auto i : query.func_var_table)
-		code += gen_vardecl(i);
+		code += gen_vardecl(i, true);
 	// initial global variables
 	if (name == "main")
 	{
@@ -357,6 +367,8 @@ stmt_node::stmt_node()
 {
 	if (blk_id == 1) // in the function
 		last_stmt = this;
+	gen_code();
+	dbg_printf("create a stmt_node...\n");
 }
 
 // void function for update
@@ -384,7 +396,7 @@ assign_stmt_node::assign_stmt_node(exp_node *_lval, exp_node *_assign_exp)
 	assign_exp = _assign_exp;
 	if (lval->exp_type != EXP_ARRAY && lval->exp_type != EXP_VAR)
 		yyerror("expression is not assignable");
-	assign_exp->reduce(false);
+	assign_exp->reduce();
 	gen_code();
 }
 
@@ -400,7 +412,7 @@ void assign_stmt_node::gen_code()
 exp_stmt_node::exp_stmt_node(exp_node *_exp_stmt)
 {
 	exp_stmt = _exp_stmt;
-	exp_stmt->reduce(false);
+	exp_stmt->reduce();
 	gen_code();
 }
 
@@ -507,18 +519,22 @@ void goto_stmt_node::gen_code()
 
 ret_stmt_node::ret_stmt_node(exp_node *_ret_val)
 {
-	ret_type = _ret_val ? INT : VOID;
+	dbg_printf("generate a ret_stmt_node... ret_val is null: %d\n",
+		_ret_val == nullptr);
+	ret_type = (_ret_val != nullptr) ? INT : VOID;
 	ret_val = _ret_val;
-	if (func_table[func_name].ret_type != ret_type)
+	if (func_table[now_func_name].ret_type != ret_type)
 	{
 		string msg;
-		switch (func_table[func_name].ret_type)
+		switch (func_table[now_func_name].ret_type)
 		{
 		case INT:
-			msg = "non-void function '" + func_name + "' should return a value";
+			msg = "non-void function '" + now_func_name +
+				"' should return a value";
 			break;
 		case VOID:
-			msg = "void function '" + func_name + "' should not return a value";
+			msg = "void function '" + now_func_name +
+				"' should not return a value";
 			break;
 		default: dbg_printf("there cannot be other type!\n");
 		}
@@ -526,11 +542,11 @@ ret_stmt_node::ret_stmt_node(exp_node *_ret_val)
 	}
 	if (ret_type == INT)
 	{
-		ret_val->reduce(true);
+		ret_val->reduce();
 		if (ret_val->exp_type == EXP_PTR)
 		{
 			string msg =
-				"function '" + func_name + "' should not return a pointer";
+				"function '" + now_func_name + "' should not return a pointer";
 			yyerror(msg.c_str());
 		}
 	}
@@ -543,6 +559,8 @@ void ret_stmt_node::gen_code()
 	{
 		code += ret_val->code;
 		code += "\treturn " + ret_val->eeyore_name + "\n";
+		dbg_printf("gen_code in ret_stmt...ret_val:%s\n",
+			ret_val->eeyore_name.c_str());
 	}
 	else
 		code = "\treturn\n";
@@ -556,7 +574,7 @@ exp_node::exp_node(exp_t _exp_type, const string &_sysy_name, int _num,
 	child = _child;
 	num = _num;
 	op = _op;
-	reduce(false);
+	reduce();
 }
 
 // set next node pointer
@@ -568,23 +586,34 @@ void exp_node::set_next(node_basic *_next)
 // allocate a new temporary variable
 void exp_node::new_temp()
 {
-	if (eeyore_name.empty())
-	{
-		code += "\tt" + to_string(temp_id) + " = " + eeyore_name + "\n";
-		sysy_name = "#t" + to_string(temp_id);
-		eeyore_name = "t" + to_string(temp_id++);
-		reg_var(sysy_name);
-		return;
-	}
+	code += "\tt" + to_string(temp_id) + " = " + eeyore_name + "\n";
+	sysy_name = "#t" + to_string(temp_id);
+	eeyore_name = "t" + to_string(temp_id++);
+	reg_var(sysy_name);
+	return;
 }
 
 // reduce the expression to a simpler form
-void exp_node::reduce(bool alloc)
+void exp_node::reduce()
 {
-	if (alloc)
-		assert(exp_type != EXP_INITVAL);
 	if (exp_type == EXP_NUM)
+	{
 		eeyore_name = to_string(num);
+		sysy_name = "?num";
+		dbg_printf("eeyore_name in exp_node: %s\n", eeyore_name.c_str());
+	}
+	else if (exp_type == EXP_VAR)
+	{
+		var_entry query;
+		find_var(sysy_name, query);
+		eeyore_name = query.eeyore_name;
+		if (query.is_const && query.dim.size() == 0) // a const
+		{
+			exp_type = EXP_NUM;
+			eeyore_name = to_string(query.val[0]);
+			sysy_name = "?num";
+		}
+	}
 }
 
 array_exp_node::array_exp_node(
@@ -609,16 +638,17 @@ array_exp_node::array_exp_node(
 		}
 		exp_type = EXP_VAR;
 		sysy_name = sysy_array_name;
+		eeyore_name = query.eeyore_name;
 	}
 	else
 		while (first_dim) // an array
 		{
-			first_dim->reduce(true);
+			first_dim->reduce();
 			assert(exp_type != EXP_INITVAL);
 			sysy_idx.push_back(first_dim);
 			first_dim = first_dim->next;
 		}
-	reduce(false);
+	reduce();
 }
 
 // generate the index expression for sysy index vector
@@ -638,7 +668,7 @@ exp_node *array_exp_node::idx_open(const vector<exp_node *> &idx, size_t len)
 }
 
 // reduce to a eeyore form - variable, number, array or pointer
-void array_exp_node::reduce(bool alloc)
+void array_exp_node::reduce()
 {
 	var_entry query;
 	if (!find_var(sysy_array_name, query)) // not defined
@@ -647,6 +677,8 @@ void array_exp_node::reduce(bool alloc)
 		yyerror(msg.c_str());
 		return;
 	}
+	if (exp_type == EXP_NUM) // a number
+		return;
 	if (exp_type == EXP_VAR) // a variable
 	{
 		if (query.is_const) // a constant
@@ -674,7 +706,7 @@ void array_exp_node::reduce(bool alloc)
 	{
 		auto array_id = new exp_node(EXP_VAR, sysy_array_name);
 		exp_type = EXP_PTR;
-		int steplen = 4;
+		int steplen = int_size;
 		auto start_dim = query.dim.size() - sysy_idx.size();
 		auto dim_size = query.dim.size();
 		for (auto i = start_dim; i < dim_size; i++)
@@ -684,11 +716,9 @@ void array_exp_node::reduce(bool alloc)
 			MUL, eeyore_exp, new exp_node(EXP_NUM, "", steplen));
 		eeyore_exp = new arith_exp_node(ADD, array_id, eeyore_exp);
 	}
-	eeyore_exp->reduce(false);
+	eeyore_exp->reduce();
 	code = eeyore_exp->code;
 	eeyore_name = eeyore_exp->eeyore_name;
-	if (alloc)
-		new_temp();
 }
 
 arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
@@ -699,11 +729,11 @@ arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 		yyerror("operator '!' should only appear in condition expression");
 	if (left->exp_type == EXP_PTR || (right && right->exp_type == EXP_PTR))
 		yyerror("pointer cannot be in an expression");
-	reduce(false);
+	reduce();
 }
 
 // reduce the expression to a simpler form, if can't, create a temp name
-void arith_exp_node::reduce(bool alloc)
+void arith_exp_node::reduce()
 {
 	assert(left->exp_type != EXP_INITVAL);
 	if (right) // binary operator
@@ -729,6 +759,7 @@ void arith_exp_node::reduce(bool alloc)
 			default: dbg_printf("%d is not a binary operator!", (int)op); break;
 			}
 			eeyore_name = to_string(num);
+			sysy_name = "?num";
 		}
 		else
 		{
@@ -772,6 +803,10 @@ void arith_exp_node::reduce(bool alloc)
 			case MOD:
 				eeyore_name = left->eeyore_name + " % " + right->eeyore_name;
 				break;
+			case LOAD:
+				eeyore_name =
+					left->eeyore_name + "[" + right->eeyore_name + "]";
+				break;
 			default: dbg_printf("%d is not a binary operator!", (int)op); break;
 			} // switch
 
@@ -789,6 +824,7 @@ void arith_exp_node::reduce(bool alloc)
 			default: dbg_printf("%d is not a unary operator!", (int)op); break;
 			}
 			eeyore_name = to_string(num);
+			sysy_name = "?num";
 		}
 		else
 		{
@@ -803,8 +839,6 @@ void arith_exp_node::reduce(bool alloc)
 			}
 		}
 	}
-	if (alloc) // allocate a name
-		new_temp();
 }
 
 func_call_exp_node::func_call_exp_node(
@@ -828,17 +862,19 @@ func_call_exp_node::func_call_exp_node(
 	dbg_printf("func call to %s ", sysy_func_name.c_str());
 	while (first_param)
 	{
+		first_param->reduce();
 		params.push_back(first_param);
 		first_param = first_param->next;
 	}
 	check_valid();
+	reduce();
 }
 
 // check if a single parameter match
 static void check_single(
 	exp_node *RParam, const var_entry &FParam, const string &func_name)
 {
-	RParam->reduce(true);
+	RParam->reduce();
 	dbg_printf("param : %s,\n", RParam->sysy_name.c_str());
 	if (FParam.is_array) // an array
 	{
@@ -931,29 +967,24 @@ void func_call_exp_node::check_ret_type(exp_node *func_exp)
 }
 
 // reduce the expression to a simpler form
-void func_call_exp_node::reduce(bool alloc)
+void func_call_exp_node::reduce()
 {
-	if (alloc || func_table[sysy_func_name].ret_type == INT)
-		new_temp();
-	else
-	{
-		eeyore_name = "call f_" + sysy_func_name + "\n";
-		code += eeyore_name;
-	}
+	for (auto i : params)
+		code += i->code;
+	for (auto i : params)
+		code += "\tparam " + i->eeyore_name + "\n";
+	eeyore_name = "call f_" + sysy_func_name;
 }
 
 // allocate a new temporary name for func call
 void func_call_exp_node::new_temp()
 {
-	if (eeyore_name.empty())
-	{
-		check_ret_type(this);
-		sysy_name = "#t" + to_string(temp_id);
-		eeyore_name = "t" + to_string(temp_id);
-		code += "\t" + eeyore_name + " = call f_" + sysy_func_name + "\n";
-		reg_var(sysy_name);
-		return;
-	}
+	check_ret_type(this);
+	sysy_name = "#t" + to_string(temp_id);
+	eeyore_name = "t" + to_string(temp_id);
+	code += "\t" + eeyore_name + " = call f_" + sysy_func_name + "\n";
+	reg_var(sysy_name);
+	return;
 }
 
 cond_exp_node::cond_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
@@ -969,7 +1000,7 @@ void cond_exp_node::traverse()
 {
 	if (right == nullptr) // leaf node
 	{
-		left->reduce(true);
+		left->reduce();
 		code += left->code;
 		if (true_label != fall_label && false_label != fall_label) // if-else
 			code += "\tif " + left->eeyore_name + " goto l" +

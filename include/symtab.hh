@@ -44,7 +44,7 @@ struct func_entry {
 
 extern vector<var_table_t> var_stack;
 extern func_table_t func_table;
-extern string func_name;
+extern string now_func_name;
 extern int blk_id;
 extern bool create;
 

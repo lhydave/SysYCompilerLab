@@ -228,7 +228,7 @@ struct exp_node : public node_basic {
 	exp_node(exp_t _exp_type, const string &_sysy_name = "", int _num = 0,
 		op_t _op = NONE, exp_node *_child = nullptr);
 	virtual void new_temp();
-	virtual void reduce(bool alloc);
+	virtual void reduce();
 	void set_next(node_basic *_next);
 };
 // struct exp_node end
@@ -241,7 +241,7 @@ struct array_exp_node : public exp_node {
 
 	array_exp_node(exp_node *first_dim, const string &_sysy_name = "");
 	static exp_node *idx_open(const vector<exp_node *> &idx, size_t len);
-	void reduce(bool alloc);
+	void reduce();
 };
 // struct array_exp_node end
 
@@ -251,7 +251,7 @@ struct arith_exp_node : public exp_node {
 	exp_node *right; // right one
 
 	arith_exp_node(op_t _op, exp_node *_left, exp_node *_right = nullptr);
-	void reduce(bool alloc);
+	void reduce();
 };
 // struct array_exp_node end
 
@@ -264,7 +264,7 @@ struct func_call_exp_node : public exp_node {
 		const string &func_name, exp_node *first_param = nullptr);
 	void check_valid();
 	static void check_ret_type(exp_node *func_exp);
-	void reduce(bool alloc);
+	void reduce();
 	void new_temp();
 };
 // struct func_call_exp end

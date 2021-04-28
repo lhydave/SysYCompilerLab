@@ -17,7 +17,7 @@
 
 vector<var_table_t> var_stack; // variable table stack
 func_table_t func_table; // function table stack
-string func_name; // name of current function
+string now_func_name; // name of current function
 int blk_id = 0; // index of current block - 0 for global
 bool create = true; // whether to create a symbol table
 static int var_id = 0; // index of current variable
@@ -107,7 +107,7 @@ void dec_blk()
 {
 	blk_id--;
 	if (blk_id == 0)
-		func_name = "";
+		now_func_name = "";
 	var_stack.pop_back();
 }
 
@@ -130,10 +130,10 @@ void reg_var(const string &name, bool is_const, bool is_array, bool is_param,
 		new_entry.eeyore_name = name.substr(1);
 	if (blk_id) // defined in the function!
 	{
-		assert(!func_name.empty());
-		func_table[func_name].func_var_table.push_back(new_entry);
+		assert(!now_func_name.empty());
+		func_table[now_func_name].func_var_table.push_back(new_entry);
 		if (is_param) // a parameter!
-			func_table[func_name].params.push_back(new_entry);
+			func_table[now_func_name].params.push_back(new_entry);
 	}
 	var_stack[blk_id][name] = new_entry;
 	return;
@@ -173,7 +173,7 @@ void reg_func(const char *_name, data_t ret_type)
 		return;
 	}
 	func_table[name] = func_entry(name, ret_type);
-	func_name = name;
+	now_func_name = name;
 }
 
 // find if function exists and store the item
