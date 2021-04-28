@@ -24,6 +24,11 @@ int main(int argc, char **argv)
 		default: printf("Not support yet!\n"); return 0;
 		}
 	}
+	if (!gen_eeyore)
+	{
+		printf("Not support yet!\n");
+		return 0;
+	}
 	if (gen_out == nullptr || yyin == nullptr)
 	{
 		fprintf(stderr, "No file opened.\n");
@@ -35,7 +40,7 @@ int main(int argc, char **argv)
 	{
 		yyparse();
 	} while (!feof(yyin));
-	if(!has_err) // good!
-		fprintf(gen_out, root->code.c_str());
+	if (!has_err) // good!
+		fprintf(gen_out, "%s", root->code.c_str());
 	return 0;
 }

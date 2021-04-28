@@ -5,7 +5,7 @@ CDEBUG		:= -g -D DEBUG
 CFLAGS 		:= -lm -O2 -Wall -std=c++11 #$(CDEBUG)
 TOP 		:= .
 INCLUDE 	:= util/node.cc util/symtab.cc main.cc
-YACCDEBUG	:= -v --report=all
+YACCDEBUG	:= #-v --report=all
 
 all: eeyore-parser
 
