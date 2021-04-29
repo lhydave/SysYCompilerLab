@@ -724,6 +724,7 @@ void array_exp_node::reduce()
 		return;
 	if (exp_type == EXP_VAR) // a variable
 	{
+		throw -1;
 		if (query.is_const) // a constant
 		{
 			exp_type = EXP_NUM;
@@ -743,7 +744,6 @@ void array_exp_node::reduce()
 	}
 	else if (sysy_idx.size() == query.dim.size()) // an array
 	{
-		throw -1;
 		eeyore_exp = idx_open(sysy_idx, int_size);
 		eeyore_exp = new arith_exp_node(
 			MUL, eeyore_exp, new exp_node(EXP_NUM, "", int_size));
