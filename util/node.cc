@@ -437,7 +437,7 @@ void if_stmt_node::update(
 	true_stmt = _true_stmt;
 	false_stmt = _false_stmt;
 	has_else = (false_stmt != nullptr);
-	if (has_else)
+	if (!has_else)
 	{
 		cond->true_label = true_label = fall_label;
 		cond->false_label = false_label = new_label();
