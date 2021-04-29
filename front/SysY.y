@@ -3,7 +3,7 @@
 #include "node.hpp"
 #include "symtab.hpp"
 #ifdef DEBUG
-#define dbg_printf(...) do { printf(__VA_ARGS__); fflush(stdout);} while(0);
+#define dbg_printf(...) do { printf(__VA_ARGS__); fflush(stdout);} while(0)
 #else
 #define dbg_printf(...)
 #endif

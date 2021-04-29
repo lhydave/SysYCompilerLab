@@ -8,7 +8,7 @@
 	{                        \
 		printf(__VA_ARGS__); \
 		fflush(stdout);      \
-	} while (0);
+	} while (0)
 #else
 #undef assert
 #define assert(...)
