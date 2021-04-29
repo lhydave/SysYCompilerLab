@@ -783,6 +783,7 @@ arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 // reduce the expression to a simpler form, if can't, create a temp name
 void arith_exp_node::reduce()
 {
+	throw -1;
 	if (!sysy_name.empty())
 		return;
 	assert(left->exp_type != EXP_INITVAL);
@@ -891,9 +892,6 @@ func_call_exp_node::func_call_exp_node(
 	const string &func_name, exp_node *first_param) :
 	exp_node(EXP_FUNC_CALL)
 {
-	if (func_name != "main")
-		throw -1;
-
 	sysy_func_name = func_name;
 	// tackle marcos
 	if (sysy_func_name == "starttime" || sysy_func_name == "stoptime")
