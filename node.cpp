@@ -877,8 +877,8 @@ void arith_exp_node::reduce()
 			code = left->code;
 			switch (op)
 			{
-			case NEGATE: eeyore_name = "-" + left->eeyore_name; break;
-			case NOT: eeyore_name = "!" + left->eeyore_name; break;
+			case NEGATE: eeyore_name = "- " + left->eeyore_name; break;
+			case NOT: eeyore_name = "! " + left->eeyore_name; break;
 			default: dbg_printf("%d is not a unary operator!", (int)op); break;
 			}
 		}
