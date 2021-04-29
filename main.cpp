@@ -35,9 +35,6 @@ int main(int argc, char **argv)
 		fprintf(stderr, "No file opened.\n");
 		return 1;
 	}
-	const int loc = 0;
-	fseek(yyin, loc, SEEK_SET);
-	return (int)fgetc(yyin);
 	// initialize symbol tables
 	init_tables();
 	do
