@@ -52,7 +52,7 @@ ConstDecl : CONST DTYPE ConstDefs ';'  { if($2 != INT) yyerror("variable type mu
     | CONST DTYPE error ';' { yyerror("invalid symbols among declarations");}
 ConstDefs
     : ConstDef     { $$ = $1; }
-    | ConstDef ',' ConstDefs { $1->set_next($3); $$ = $1; throw 0; }
+    | ConstDef ',' ConstDefs { $1->set_next($3); $$ = $1; }
 ConstDef
     : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4->child); }
     | ID ConstArray  { yyerror("constant expression must be initialized.");
@@ -80,7 +80,7 @@ VarDecl : DTYPE VarDefs ';'    { if($1 != INT) yyerror("variable type must be in
     | DTYPE error ';' { yyerror("invalid symbols among declarations"); yyerrok; }
 VarDefs
     : VarDef    { $$ = $1; }
-    | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; }
+    | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; throw 0; }
 VarDef
     : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
     | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
