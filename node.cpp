@@ -21,6 +21,7 @@ static const int err_max = 40;
 // rewrite yyerror
 void yyerror(const char *msg, int lineno)
 {
+	throw 0;
 	has_err = true;
 	++err_cnt;
 	if (err_cnt > err_max)
@@ -140,8 +141,6 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 
 	set_shape(first_dim);
 	is_array = (dim.size() != 0);
-	if (!is_array && !is_param && is_const)
-		throw 0;
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
 		is_const);
 	if (!is_pt && first_val)
