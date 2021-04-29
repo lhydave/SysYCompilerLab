@@ -692,15 +692,16 @@ array_exp_node::array_exp_node(
 }
 
 // generate the index expression for sysy index vector
-exp_node *array_exp_node::idx_open(const vector<exp_node *> &idx, size_t len)
+static exp_node *idx_open(
+	const vector<exp_node *> &idx, const var_entry &query_arr)
 {
 	if (idx.empty())
 		return new exp_node(EXP_NUM, "", 0);
-	auto scale = new exp_node(EXP_NUM, "", len);
 	auto ret = *idx.begin();
 	auto size = idx.size();
 	for (auto i = 1; i < size; i++)
 	{
+		auto scale = new exp_node(EXP_NUM, "", query_arr.dim[i]);
 		dbg_printf("idx num: %d,\n", idx[i]->num);
 		ret = new arith_exp_node(MUL, ret, scale);
 		ret = new arith_exp_node(ADD, ret, idx[i]);
@@ -743,7 +744,7 @@ void array_exp_node::reduce()
 	}
 	else if (sysy_idx.size() == query.dim.size()) // an array
 	{
-		eeyore_exp = idx_open(sysy_idx, int_size);
+		eeyore_exp = idx_open(sysy_idx, query);
 		eeyore_exp = new arith_exp_node(
 			MUL, eeyore_exp, new exp_node(EXP_NUM, "", int_size));
 		auto array_id = new exp_node(EXP_VAR, sysy_array_name);
@@ -754,11 +755,11 @@ void array_exp_node::reduce()
 		auto array_id = new exp_node(EXP_VAR, sysy_array_name);
 		exp_type = EXP_PTR;
 		int steplen = int_size;
-		auto start_dim = query.dim.size() - sysy_idx.size();
+		auto start_dim = sysy_idx.size();
 		auto dim_size = query.dim.size();
 		for (auto i = start_dim; i < dim_size; i++)
 			steplen *= query.dim[i];
-		eeyore_exp = idx_open(sysy_idx, int_size);
+		eeyore_exp = idx_open(sysy_idx, query);
 		eeyore_exp = new arith_exp_node(
 			MUL, eeyore_exp, new exp_node(EXP_NUM, "", steplen));
 		eeyore_exp = new arith_exp_node(ADD, array_id, eeyore_exp);

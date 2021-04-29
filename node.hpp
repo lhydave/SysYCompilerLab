@@ -241,7 +241,6 @@ struct array_exp_node : public exp_node {
 	string sysy_array_name; // name of the array in sysy
 
 	array_exp_node(exp_node *first_dim, const string &_sysy_name = "");
-	static exp_node *idx_open(const vector<exp_node *> &idx, size_t len);
 	void reduce();
 };
 // struct array_exp_node end
