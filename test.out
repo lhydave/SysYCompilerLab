@@ -12,7 +12,7 @@ l1:	// while true label
 	if t0 == 0 goto l4
 	goto l2
 l4:	// if next label
-	goto 2
+	goto l2
 l2:	// while next label
 	return T0
 	return 0
