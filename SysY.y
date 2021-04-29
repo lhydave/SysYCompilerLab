@@ -87,12 +87,12 @@ VarDef
 InitVal
     : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
-    | '{' '}' { $$ = new exp_node(EXP_INITVAL); throw 0; }
+    | '{' '}' { $$ = new exp_node(EXP_INITVAL);}
     | '{' InitVals error { yyerror("expected '}'"); }
     | '{' error { yyerror("expected '}'"); }
 InitVals
     : InitVal   { $$ = $1; }
-    | InitVal ',' InitVals  { $1->set_next($3); $$ = $1; }
+    | InitVal ',' InitVals  { $1->set_next($3); $$ = $1; throw 0; }
 
 FuncDef
     : DTYPE ID  '('  Minc_func FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7); }
