@@ -8,6 +8,7 @@ int yyparse(void);
 int yylex(void);
 node_basic *root; // root of the parse tree
 bool has_err = false; // true if an error occurred
+const int loc = 0;
 int main(int argc, char **argv)
 {
 	const char *optstring = "Se:o:";
@@ -34,6 +35,11 @@ int main(int argc, char **argv)
 		fprintf(stderr, "No file opened.\n");
 		return 1;
 	}
+	char ch;
+	int cnt = 0;
+	while ((ch = fgetc(yyin)) != EOF)
+		cnt += (ch == '\n');
+	return cnt;
 	// initialize symbol tables
 	init_tables();
 	do
