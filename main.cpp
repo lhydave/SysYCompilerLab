@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	}
 	const int loc = 0;
 	fseek(yyin, loc, SEEK_SET);
-	return fgetc(yyin);
+	return (int)fgetc(yyin);
 	// initialize symbol tables
 	init_tables();
 	do
