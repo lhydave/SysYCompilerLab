@@ -57,7 +57,7 @@ struct arith_exp_node;
 struct func_call_exp_node;
 struct cond_exp_node;
 
-using yylval_t = union {
+typedef union {
 	int num;
 	const char *name;
 	op_t op;
@@ -69,7 +69,7 @@ using yylval_t = union {
 	stmt_node *stmt;
 	exp_node *exp_basic;
 	cond_exp_node *cond_exp;
-};
+} yylval_t;
 #define YYSTYPE yylval_t
 
 // global variables

@@ -1,8 +1,9 @@
 .DS_Store
 *.o
-SysY.output
 .*
 *.dSYM
+SysY.output
 SysY.tab.hpp
+SysY.tab.cpp
 .gitignore
 lex.yy.cpp
