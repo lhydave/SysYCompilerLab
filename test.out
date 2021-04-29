@@ -1,5 +1,5 @@
 var T0
-var 100 T1
+var 144 T1
 var 20 T2
 f_topological_sort [1]
 	var T3

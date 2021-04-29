@@ -21,7 +21,7 @@ static const int err_max = 40;
 // rewrite yyerror
 void yyerror(const char *msg, int lineno)
 {
-	has_err = true;
+	//has_err = true;
 	++err_cnt;
 	if (err_cnt > err_max)
 	{

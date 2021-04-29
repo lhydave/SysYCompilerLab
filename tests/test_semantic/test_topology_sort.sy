@@ -1,5 +1,5 @@
 const int V = 5;
-int G[V][V];
+int G[V + 1][V + 1];
 int degree[V];
 void topological_sort(int n)
 {
