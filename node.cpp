@@ -150,7 +150,8 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 		int_val.push_back(i->num);
 		dbg_printf("%d ", *int_val.rbegin());
 	}
-	dbg_printf("\n");
+	if (first_val && !is_param && val.size() != size)
+		throw 0;
 	reg_var(name, is_const, is_array, is_param, dim, int_val);
 	gen_code();
 }
