@@ -3,20 +3,20 @@ YACC 		:= bison
 CC 			:= g++
 CDEBUG		:= -g -D DEBUG
 CFLAGS 		:= -lm -O2 -Wall -std=c++11 #$(CDEBUG)
-TOP 		:= .
-INCLUDE 	:= node.cpp symtab.cpp main.cpp
+INCLUDEDIR 	:= -Ifront
+INCLUDE 	:= front/node.cpp front/symtab.cpp main.cpp
 YACCDEBUG	:= #-v --report=all
 
-all: eeyore-parser
+all: compiler
 
-eeyore-parser: eeyore-tab $(INCUDE)
-	$(CC) $(CFLAGS) -I$(TOP) SysY.tab.cpp lex.yy.cpp $(INCLUDE) -o parser.o
+compiler: eeyore-tab $(INCUDE)
+	$(CC) $(CFLAGS) $(INCLUDEDIR) SysY.tab.cpp lex.yy.cpp $(INCLUDE) -o compiler
 
 eeyore-tab: eeyore-lex $(INCLUDE)
-	$(YACC) $(YACCDEBUG) -d -o SysY.tab.cpp SysY.y
+	$(YACC) $(YACCDEBUG) -d -o SysY.tab.cpp front/SysY.y
 
-eeyore-lex: SysY.l
-	$(LEX) -o lex.yy.cpp SysY.l
+eeyore-lex: front/SysY.l
+	$(LEX) -o lex.yy.cpp front/SysY.l
 
 clean:
 	rm -f *.o *.output *.out
