@@ -16,12 +16,12 @@
 #define dbg_printf(...)
 #endif
 
+int nummmm = 0;
 static int err_cnt = 0;
 static const int err_max = 40;
 // rewrite yyerror
 void yyerror(const char *msg, int lineno)
 {
-	throw 0;
 	has_err = true;
 	++err_cnt;
 	if (err_cnt > err_max)
@@ -133,6 +133,9 @@ void node_basic::set_next(node_basic *_next)
 vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	bool _is_param, exp_node *first_dim, exp_node *first_val)
 {
+	nummmm++;
+	if (nummmm > 1)
+		throw 0;
 	name = string(_name);
 	dbg_printf("var %s, ", _name);
 	is_const = _is_const;
