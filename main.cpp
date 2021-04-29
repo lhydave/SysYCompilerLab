@@ -11,6 +11,7 @@ bool has_err = false; // true if an error occurred
 const int loc = 0;
 int main(int argc, char **argv)
 {
+	return 2;
 	const char *optstring = "Se:o:";
 	char c;
 	bool gen_eeyore = false;
