@@ -80,10 +80,10 @@ VarDecl : DTYPE VarDefs ';'    { if($1 != INT) yyerror("variable type must be in
     | DTYPE error ';' { yyerror("invalid symbols among declarations"); yyerrok; }
 VarDefs
     : VarDef    { $$ = $1; }
-    | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; throw 0; }
+    | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; }
 VarDef
     : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
-    | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
+    | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); throw 0; }
 InitVal
     : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
