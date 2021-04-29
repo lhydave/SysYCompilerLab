@@ -10,6 +10,7 @@ node_basic *root; // root of the parse tree
 bool has_err = false; // true if an error occurred
 int main(int argc, char **argv)
 {
+	return 1;
 	const char *optstring = "Se:o:";
 	char c;
 	bool gen_eeyore = false;
