@@ -1,0 +1,28 @@
+void swap(int a[], int b[], int n)
+{
+    int i = 0;
+    while(i < n)
+    {
+        int temp = a[i];
+        a[i] = b[i];
+        b[i] = temp;
+        i = i + 1;
+    }
+}
+
+const int n = 5;
+int a[n];
+int b[n];
+
+int main()
+{
+    int num1 = getarray(a);
+    int num2 = getarray(b);
+    int n = num1;
+    if(num2 < num1)
+        n = num2;
+    swap(a, b, n);
+    putarray(n, a);
+    putarray(n, b);
+    return 0;
+}
