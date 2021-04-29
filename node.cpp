@@ -410,11 +410,9 @@ assign_stmt_node::assign_stmt_node(exp_node *_lval, exp_node *_assign_exp)
 	if (lval->exp_type != EXP_ARRAY && lval->exp_type != EXP_VAR)
 		yyerror("expression is not assignable");
 
+	assign_exp->reduce();
 	if (lval->exp_type == EXP_ARRAY)
-	{
-		assign_exp->reduce();
 		assign_exp->new_temp();
-	}
 	gen_code();
 }
 
@@ -627,12 +625,13 @@ void exp_node::set_next(node_basic *_next)
 // allocate a new temporary variable
 void exp_node::new_temp()
 {
-	if (exp_type != EXP_NUM && exp_type != EXP_VAR)
+	if (!temped && exp_type != EXP_NUM && exp_type != EXP_VAR)
 	{
 		code += "\tt" + to_string(temp_id) + " = " + eeyore_name + "\n";
 		sysy_name = "#t" + to_string(temp_id);
 		eeyore_name = "t" + to_string(temp_id++);
 		reg_var(sysy_name);
+		temped = true;
 	}
 }
 
@@ -684,6 +683,7 @@ array_exp_node::array_exp_node(
 		while (first_dim) // an array
 		{
 			first_dim->reduce();
+			first_dim->new_temp();
 			assert(exp_type != EXP_INITVAL);
 			sysy_idx.push_back(first_dim);
 			first_dim = first_dim->next;
@@ -907,7 +907,6 @@ func_call_exp_node::func_call_exp_node(
 	dbg_printf("func call to %s \n", sysy_func_name.c_str());
 	while (first_param)
 	{
-		first_param->reduce();
 		params.push_back(first_param);
 		first_param = first_param->next;
 	}
