@@ -133,9 +133,6 @@ void node_basic::set_next(node_basic *_next)
 vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	bool _is_param, exp_node *first_dim, exp_node *first_val)
 {
-	nummmm++;
-	if (nummmm > 5)
-		throw 0;
 	name = string(_name);
 	dbg_printf("var %s, ", _name);
 	is_const = _is_const;
