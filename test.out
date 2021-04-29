@@ -1,6 +1,165 @@
+var T0
+var 100 T1
+var 20 T2
+f_topological_sort [1]
+	var T3
+	var T4
+	var T5
+	var T6
+	var t0
+	var t1
+	var t2
+	var t3
+	var t4
+	var t5
+	var t6
+	var t7
+	var t8
+	var t9
+	var t10
+	var t11
+	var t12
+	var t13
+	var t14
+	var t15
+	var t16
+	var t17
+	var t18
+	var t19
+	var t20
+	var t21
+	var t22
+	T6 = 0
+	T3 = 1
+l0:	// while start label
+	t22 = T3 <= p0
+	if t22 == 0 goto l2
+l1:	// while true label
+	T4 = 1
+l3:	// while start label
+	t8 = T4 <= p0
+	if t8 == 0 goto l5
+l4:	// while true label
+	t0 = T4 * 4
+	t1 = T2[t0]
+	t7 = t1 == 0
+	if t7 == 0 goto l11
+	t2 = !T6
+	if t2 == 1 goto l8
+	goto l9
+l8:	// if true label
+	param T4
+	call f_putint
+	T6 = 1
+	goto l10
+l9:	// if false label
+	param T4
+	call f_putint
+l10:	// if next label
+	t4 = T4 * 4
+	t5 = T2[t4]
+	t6 = t5 - 1
+	t3 = T4 * 4
+	T2[t3] = t6
+	T5 = T4
+	goto l5
+l11:	// if next label
+	T4 = T4 + 1
+	goto l3
+l5:	// while next label
+	T4 = 1
+l12:	// while start label
+	t21 = T4 <= p0
+	if t21 == 0 goto l14
+l13:	// while true label
+	t9 = T5 * 4
+	t10 = t9 + T4
+	t11 = t10 * 4
+	t12 = T1[t11]
+	t20 = t12 == 1
+	if t20 == 0 goto l16
+	t13 = T5 * 4
+	t14 = t13 + T4
+	t15 = t14 * 4
+	T1[t15] = 0
+	t17 = T4 * 4
+	t18 = T2[t17]
+	t19 = t18 - 1
+	t16 = T4 * 4
+	T2[t16] = t19
+l16:	// if next label
+	T4 = T4 + 1
+	goto l12
+l14:	// while next label
+	T3 = T3 + 1
+	goto l0
+l2:	// while next label
+	return
+end f_topological_sort
+
 f_main [0]
-	var T0
-	T0 = 49705
+	var T7
+	var T8
+	var T9
+	var t0
+	var T10
+	var T11
+	var T12
+	var t1
+	var t2
+	var t3
+	var t4
+	var t5
+	var t6
+	var t7
+	var t8
+	var t9
+	var t10
+	var t11
+	var t12
+	var t13
+	var t14
+	T0 = 5
+	t0 = call f_getint
+	T10 = t0
+	T7 = 1
+l17:	// while start label
+	t14 = T7 <= T10
+	if t14 == 0 goto l19
+l18:	// while true label
+l20:	// while start label
+	if 1 == 0 goto l22
+l21:	// while true label
+	T12 = call f_getch
+	t1 = !T12
+	if t1 == 0 goto l24
+	goto l22
+l24:	// if next label
+	t2 = T7 * 4
+	t3 = t2 + T12
+	t4 = t3 * 4
+	t5 = T1[t4]
+	t13 = !t5
+	if t13 == 0 goto l26
+	t6 = T7 * 4
+	t7 = t6 + T12
+	t8 = t7 * 4
+	T1[t8] = 1
+	t10 = T12 * 4
+	t11 = T2[t10]
+	t12 = t11 + 1
+	t9 = T12 * 4
+	T2[t9] = t12
+l26:	// if next label
+	goto l20
+l22:	// while next label
+	T7 = T7 + 1
+	goto l17
+l19:	// while next label
+	param T10
+	call f_topological_sort
+	param 1
+	call f_putch
 	return 0
 	return 0
 end f_main

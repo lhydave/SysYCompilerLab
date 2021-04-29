@@ -668,7 +668,6 @@ array_exp_node::array_exp_node(
 			return;
 		}
 		exp_type = EXP_VAR;
-		sysy_name = sysy_array_name;
 		eeyore_name = query.eeyore_name;
 	}
 	else
