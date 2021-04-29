@@ -16,7 +16,6 @@
 #define dbg_printf(...)
 #endif
 
-int nummmm = 0;
 static int err_cnt = 0;
 static const int err_max = 40;
 // rewrite yyerror
@@ -141,6 +140,8 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 
 	set_shape(first_dim);
 	is_array = (dim.size() != 0);
+	if(dim.size()>3)
+		throw 0;
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
 		is_const);
 	if (!is_pt && first_val)
