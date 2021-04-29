@@ -54,9 +54,9 @@ ConstDefs
     : ConstDef     { $$ = $1; }
     | ConstDef ',' ConstDefs { $1->set_next($3); $$ = $1; }
 ConstDef
-    : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4->child); }
+    : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4->child);  throw 0; }
     | ID ConstArray  { yyerror("constant expression must be initialized.");
-                       $$ = new vardef_node($1, true, false, false, $2, nullptr); throw 0; }
+                       $$ = new vardef_node($1, true, false, false, $2, nullptr); }
 ConstArray
     : '[' ConstExp ']' ConstArray { $2->set_next($4); $$ = $2; }
     |   { $$ = nullptr; }
