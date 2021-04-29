@@ -419,6 +419,7 @@ assign_stmt_node::assign_stmt_node(exp_node *_lval, exp_node *_assign_exp)
 // generate code for assignment
 void assign_stmt_node::gen_code()
 {
+	throw -1;
 	code = assign_exp->code + lval->code;
 
 	auto r_lval = static_cast<array_exp_node *>(lval);
@@ -724,7 +725,6 @@ void array_exp_node::reduce()
 		return;
 	if (exp_type == EXP_VAR) // a variable
 	{
-		throw -1;
 		if (query.is_const) // a constant
 		{
 			exp_type = EXP_NUM;
