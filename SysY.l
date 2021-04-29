@@ -46,7 +46,7 @@ IllegalSymbol   .
 {identifier}                  { yylval.name = namestr(yytext); return ID; }
 {decconst}                    { yylval.num = str2num(yytext, 10); return NUM; }
 {octconst}                    { yylval.num = str2num(yytext, 8); return NUM; }
-{hexconst}                    { yylval.num = str2num(yytext, 16); return NUM; }
+{hexconst}                    { yylval.num = str2num(yytext + 2, 16); return NUM; }
 {SingleOp}                    { yylval.op = str2op(yytext); return yytext[0]; }
 {IllegalNum}                  { yyerror("illegal octal number"); }
 {IllegalName}                 { yyerror("illegal identifier name"); }
