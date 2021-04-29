@@ -140,7 +140,8 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 
 	set_shape(first_dim);
 	is_array = (dim.size() != 0);
-	dbg_printf("is_array: %d\n", is_array);
+	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
+		is_const);
 	if (!is_pt && first_val)
 		val = set_val(dim, first_val);
 	vector<int> int_val;
@@ -281,20 +282,16 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *first_val)
 	return ret;
 }
 
-funcdef_node::funcdef_node(const char *_name, data_t _ret_type,
-	node_basic *_blk, vardef_node *first_param)
+funcdef_node::funcdef_node(
+	const char *_name, data_t _ret_type, node_basic *_blk)
 {
 	blk = _blk;
 	name = string(_name);
 	dbg_printf("def a func named %s\n", _name);
 	ret_type = _ret_type;
-	while (first_param)
-	{
-		params.push_back(first_param);
-		first_param = first_param->next;
-	}
 	add_ret(blk != nullptr);
 	gen_code();
+	temp_id = 0;
 }
 
 // always add an return statement at the end of the funcdef
@@ -334,12 +331,16 @@ static string gen_vardecl(const var_entry &var, bool indent)
 // generate code for function definition
 void funcdef_node::gen_code()
 {
-	code = "f_" + name + +" [" + to_string(params.size()) + "]\n";
 	func_entry query;
 	find_func(name, query);
+	code = "f_" + name + +" [" + to_string(query.params.size()) + "]\n";
 	// declarations
 	for (auto i : query.func_var_table)
+	{
+		dbg_printf("sysy_name:%s eeyore_name:%s\n", i.sysy_name.c_str(),
+			i.eeyore_name.c_str());
 		code += gen_vardecl(i, true);
+	}
 	// initial global variables
 	if (name == "main")
 	{
@@ -878,7 +879,7 @@ func_call_exp_node::func_call_exp_node(
 		}
 		first_param = new exp_node(EXP_NUM, "", yylineno);
 	}
-	dbg_printf("func call to %s ", sysy_func_name.c_str());
+	dbg_printf("func call to %s \n", sysy_func_name.c_str());
 	while (first_param)
 	{
 		first_param->reduce();
@@ -894,6 +895,7 @@ static void check_single(
 	exp_node *RParam, const var_entry &FParam, const string &func_name)
 {
 	RParam->reduce();
+	RParam->new_temp();
 	dbg_printf("param : %s,\n", RParam->sysy_name.c_str());
 	if (FParam.is_array) // an array
 	{
@@ -953,6 +955,7 @@ void func_call_exp_node::check_valid()
 		return;
 	}
 	auto size = params.size();
+	dbg_printf("size: %lu\n", size);
 	if (size != query.params.size())
 	{
 		dbg_printf("real %lu : formal %lu\n", size, query.params.size());
@@ -988,10 +991,17 @@ void func_call_exp_node::check_ret_type(exp_node *func_exp)
 // reduce the expression to a simpler form
 void func_call_exp_node::reduce()
 {
+	if (!sysy_name.empty())
+		return;
+	sysy_name = "?func_call";
 	for (auto i : params)
 		code += i->code;
+	dbg_printf("reduce size: %lu\n", params.size());
 	for (auto i : params)
+	{
+		dbg_printf("real params: %s\n", i->eeyore_name.c_str());
 		code += "\tparam " + i->eeyore_name + "\n";
+	}
 	eeyore_name = "call f_" + sysy_func_name;
 }
 
@@ -1000,7 +1010,7 @@ void func_call_exp_node::new_temp()
 {
 	check_ret_type(this);
 	sysy_name = "#t" + to_string(temp_id);
-	eeyore_name = "t" + to_string(temp_id);
+	eeyore_name = "t" + to_string(temp_id++);
 	code += "\t" + eeyore_name + " = call f_" + sysy_func_name + "\n";
 	reg_var(sysy_name);
 	return;

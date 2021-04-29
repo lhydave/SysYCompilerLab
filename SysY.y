@@ -95,12 +95,12 @@ InitVals
     | InitVal ',' InitVals  { $1->set_next($3); $$ = $1; }
 
 FuncDef
-    : DTYPE ID  '('  Minc_func FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7, $5); }
+    : DTYPE ID  '('  Minc_func FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7); }
     | DTYPE ID '(' Minc_func FuncFParams error { yyerror("expected ')'"); }
 FuncFParams
-    : FuncFParam ',' FuncFParams   { $1->set_next($3); $$ = $1; }
-    | FuncFParam    { $$ = $1; }
-    | { $$ = nullptr; }
+    : FuncFParam ',' FuncFParams   ;
+    | FuncFParam    ;
+    | ;
 FuncFParam
     : DTYPE ID '[' ']' ConstArray   { if($1 != INT) yyerror("variable type must be int"); 
                                       $$ = new vardef_node($2, false, true, true, $5); }

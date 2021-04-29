@@ -107,7 +107,10 @@ void dec_blk()
 {
 	blk_id--;
 	if (blk_id == 0)
+	{
+		param_id = 0;
 		now_func_name = "";
+	}
 	var_stack.pop_back();
 }
 

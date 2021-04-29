@@ -128,8 +128,7 @@ struct funcdef_node : public node_basic {
 	node_basic *blk; // definition body
 	vector<vardef_node *> params; // parameters
 
-	funcdef_node(const char *_name, data_t _ret_type, node_basic *_blk,
-		vardef_node *first_param);
+	funcdef_node(const char *_name, data_t _ret_type, node_basic *_blk);
 	void add_ret(bool is_append);
 	void gen_code();
 };
