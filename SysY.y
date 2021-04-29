@@ -65,7 +65,7 @@ ConstArray
 ConstInitVal
     : ConstExp  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
     | '{' ConstInitVals '}' { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
-    | '{' '}'   { $$ = new exp_node(EXP_INITVAL); throw 0; }
+    | '{' '}'   { $$ = new exp_node(EXP_INITVAL); }
     | '{' ConstInitVals error { yyerror("expected '}'"); }
     | error { yyerror("expected constant expression"); }
 ConstInitVals
@@ -77,7 +77,7 @@ VarDecl : DTYPE VarDefs ';'    { if($1 != INT) yyerror("variable type must be in
                                }
     | DTYPE ';' { yyerror("nothing declared"); }
     | DTYPE VarDefs error { yyerror("expected ';'"); }
-    | DTYPE error ';' { yyerror("invalid symbols among declarations"); yyerrok; }
+    | DTYPE error ';' { yyerror("invalid symbols among declarations"); }
 VarDefs
     : VarDef    { $$ = $1; }
     | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; }
@@ -87,7 +87,7 @@ VarDef
 InitVal
     : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
-    | '{' '}' { $$ = new exp_node(EXP_INITVAL); }
+    | '{' '}' { $$ = new exp_node(EXP_INITVAL); throw 0; }
     | '{' InitVals error { yyerror("expected '}'"); }
     | '{' error { yyerror("expected '}'"); }
 InitVals
