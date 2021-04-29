@@ -6,3 +6,6 @@ SysY.tab.hpp
 SysY.output
 .*
 *.dSYM
+SysY.tab.hpp
+.gitignore
+lex.yy.cpp
