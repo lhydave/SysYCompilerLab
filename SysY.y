@@ -123,7 +123,7 @@ BlockItem
     : Decl  { $$ = $1; }
     | Stmt  { $$ = $1; }
 Stmt
-    : LVal '=' Exp  ';' { $$ = new assign_stmt_node($1,$3); }
+    : LVal '=' Exp  ';' { $$ = new assign_stmt_node($1, $3); }
     |   Exp ';' { $$ = new exp_stmt_node($1); }
     |   ';' { $$ = new stmt_node(); }
     | Block { $$ = new stmt_node(); $$->child = $1; }

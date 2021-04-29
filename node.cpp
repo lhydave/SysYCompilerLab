@@ -226,6 +226,7 @@ vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *first_val)
 			else
 			{
 				first_val->reduce();
+				first_val->new_temp();
 				ret.push_back(first_val);
 			}
 		}
@@ -396,7 +397,12 @@ assign_stmt_node::assign_stmt_node(exp_node *_lval, exp_node *_assign_exp)
 	assign_exp = _assign_exp;
 	if (lval->exp_type != EXP_ARRAY && lval->exp_type != EXP_VAR)
 		yyerror("expression is not assignable");
-	assign_exp->reduce();
+
+	if (lval->exp_type == EXP_ARRAY)
+	{
+		assign_exp->reduce();
+		assign_exp->new_temp();
+	}
 	gen_code();
 }
 
@@ -413,6 +419,7 @@ exp_stmt_node::exp_stmt_node(exp_node *_exp_stmt)
 {
 	exp_stmt = _exp_stmt;
 	exp_stmt->reduce();
+	exp_stmt->new_temp();
 	gen_code();
 }
 
@@ -543,6 +550,7 @@ ret_stmt_node::ret_stmt_node(exp_node *_ret_val)
 	if (ret_type == INT)
 	{
 		ret_val->reduce();
+		ret_val->new_temp();
 		if (ret_val->exp_type == EXP_PTR)
 		{
 			string msg =
@@ -586,11 +594,13 @@ void exp_node::set_next(node_basic *_next)
 // allocate a new temporary variable
 void exp_node::new_temp()
 {
-	code += "\tt" + to_string(temp_id) + " = " + eeyore_name + "\n";
-	sysy_name = "#t" + to_string(temp_id);
-	eeyore_name = "t" + to_string(temp_id++);
-	reg_var(sysy_name);
-	return;
+	if (exp_type != EXP_NUM && exp_type != EXP_VAR)
+	{
+		code += "\tt" + to_string(temp_id) + " = " + eeyore_name + "\n";
+		sysy_name = "#t" + to_string(temp_id);
+		eeyore_name = "t" + to_string(temp_id++);
+		reg_var(sysy_name);
+	}
 }
 
 // reduce the expression to a simpler form
