@@ -19,6 +19,6 @@ eeyore-lex: SysY.l
 	$(LEX) -o lex.yy.cpp SysY.l
 
 clean:
-	rm -f *.o *.output 
+	rm -f *.o *.output *.out
 	rm -f SysY.tab.cpp lex.yy.cpp SysY.tab.hpp
 	rm -rf *.dSYM .vscode .VSCodeCounter

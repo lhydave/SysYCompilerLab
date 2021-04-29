@@ -1,0 +1,16 @@
+int main()
+{
+    putint(1);
+    int a[5]={1,2,3,4};
+    int b[5]={2,3,3,5};
+    int c[5];
+    int i=0;
+    while(i<5)
+    {
+        c[i]=a[i]+b[i];
+        i=i+1;
+    }
+    putint(2);
+    putarray(5,c);
+    return 20;
+}
