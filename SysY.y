@@ -126,7 +126,7 @@ Stmt
     : LVal '=' Exp  ';' { $$ = new assign_stmt_node($1, $3); }
     |   Exp ';' { $$ = new exp_stmt_node($1); }
     |   ';' { $$ = new stmt_node(); }
-    | Block { $$ = new stmt_node(); $$->child = $1; }
+    | Block { $$ = new stmt_node($1); }
     | IF '(' M_if Cond ')' Stmt %prec LOWER_THAN_ELSE { $$ = $3; $$->update($4, $6, nullptr); }
     | IF '(' M_if Cond ')' Stmt ELSE Stmt { $$ = $3; $$->update($4, $6, $8); }
     | WHILE '(' M_while Cond ')' Stmt   { $$ = $3; $$->update($4, $6, nullptr); }
@@ -143,11 +143,11 @@ Stmt
     | WHILE '(' M_while Cond error Stmt { yyerror("expected ')"); }
     | BREAK error { yyerror("expected ';'"); }
     | CONTINUE error { yyerror("expected ';'"); }
-M_while : { $$= new while_stmt_node(); }
-M_if : { $$= new if_stmt_node(); }
+M_while : { $$ = new while_stmt_node(); }
+M_if : { $$ = new if_stmt_node(); }
 
 Exp : AddExp    { $$ = $1; }
-Cond : { is_cond = true; } LOrExp { is_cond = false; }
+Cond : { is_cond = true; } LOrExp { is_cond = false; $$ = $2; }
 LVal : ID Array { $$ = new array_exp_node($2, $1); }
 Array
     : '[' Exp ']'  Array { $2->set_next($4); $$ = $2; }
@@ -180,8 +180,8 @@ AddExp
     | AddExp '-' MulExp { $$ = new arith_exp_node(SUB, $1, $3); }
 RelExp
     : AddExp   { $$ = $1; }
-    | RelExp '<'AddExp { $$ = new arith_exp_node(L, $1, $3); }
-    | RelExp '>'AddExp { $$ = new arith_exp_node(G, $1, $3); }
+    | RelExp '<' AddExp { $$ = new arith_exp_node(L, $1, $3); }
+    | RelExp '>' AddExp { $$ = new arith_exp_node(G, $1, $3); }
     | RelExp T_GE AddExp { $$ = new arith_exp_node(GE, $1, $3); }
     | RelExp T_LE AddExp { $$ = new arith_exp_node(LE, $1, $3); }
 EqExp

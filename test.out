@@ -1,7 +1,19 @@
-var T0
 f_main [0]
+	var T0
+	var t0
+	var t1
 	T0 = 10
-	return 0
+l0:	// while start label
+	t1 = T0 > 0
+	if t1 == 0 goto l2
+l1:	// while true label
+	T0 = T0 - 1
+	t0 = T0 == 5
+	if t0 == 0 goto l4
+	goto l2
+l4:	// if next label
+l2:	// while next label
+	return T0
 	return 0
 end f_main
 

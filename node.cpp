@@ -364,8 +364,9 @@ void funcdef_node::gen_code()
 }
 
 // set the last statement
-stmt_node::stmt_node()
+stmt_node::stmt_node(node_basic *_child)
 {
+	child = _child;
 	if (blk_id == 1) // in the function
 		last_stmt = this;
 	gen_code();
@@ -462,19 +463,23 @@ void if_stmt_node::update(
 // generate the code of if statement
 void if_stmt_node::gen_code()
 {
-	code += cond->code;
-	code += "l" + to_string(true_label) + ":\n";
-	code += true_stmt->code;
+	code = cond->code;
+
 	if (has_else)
 	{
+		code += "l" + to_string(true_label) + ":\t// if true label\n";
+		code += true_stmt->code;
 		auto if_next_label = new_label();
-		code += "\tgoto l" + to_string(if_next_label);
-		code += "l" + to_string(false_label) + ":\n";
+		code += "\tgoto l" + to_string(if_next_label) + "\n";
+		code += "l" + to_string(false_label) + ":\t// if false label\n";
 		code += false_stmt->code;
-		code += "l" + to_string(if_next_label) + ":\n";
+		code += "l" + to_string(if_next_label) + ":\t// if next label\n";
 	}
 	else
-		code += "l" + to_string(false_label) + ":\n";
+	{
+		code += true_stmt->code;
+		code += "l" + to_string(false_label) + ":\t// if next label\n";
+	}
 }
 
 while_stmt_node::while_stmt_node()
@@ -484,6 +489,7 @@ while_stmt_node::while_stmt_node()
 	old_next_label = while_next_label;
 	while_start_label = new_label();
 	fall_label = new_label();
+	while_next_label = new_label();
 }
 
 // update the AST of while statement and generate code
@@ -496,6 +502,7 @@ void while_stmt_node::update(
 	cond->false_label = while_next_label;
 	cond->traverse();
 	gen_code();
+	fall_label = old_fall_label;
 	while_start_label = old_start_label;
 	while_next_label = old_next_label;
 }
@@ -503,25 +510,26 @@ void while_stmt_node::update(
 // generate code for while statement
 void while_stmt_node::gen_code()
 {
-	code += "l" + to_string(while_start_label) + ":\n";
+	code = "l" + to_string(while_start_label) + ":\t// while start label\n";
 	code += cond->code;
-	code += "l" + to_string(true_label) + ":\n";
+	code += "l" + to_string(true_label) + ":\t// while true label\n";
 	code += true_stmt->code;
-	code += "l" + to_string(while_next_label) + ":\n";
+	code += "l" + to_string(while_next_label) + ":\t// while next label\n";
 }
 
 goto_stmt_node::goto_stmt_node(bool _is_break)
 {
 	is_break = _is_break;
+	gen_code();
 }
 
 // generate code for break and continue statement
 void goto_stmt_node::gen_code()
 {
 	if (is_break)
-		code = "\tgoto l" + to_string(while_next_label);
+		code = "\tgoto l" + to_string(while_next_label) + "\n";
 	else
-		code = "\tgoto l" + to_string(while_start_label);
+		code = "\tgoto l" + to_string(while_start_label) + "\n";
 }
 
 ret_stmt_node::ret_stmt_node(exp_node *_ret_val)
@@ -565,13 +573,13 @@ void ret_stmt_node::gen_code()
 {
 	if (ret_val)
 	{
-		code += ret_val->code;
+		code = ret_val->code;
 		code += "\treturn " + ret_val->eeyore_name + "\n";
 		dbg_printf("gen_code in ret_stmt...ret_val:%s\n",
 			ret_val->eeyore_name.c_str());
 	}
 	else
-		code = "\treturn\n";
+		code += "\treturn\n";
 }
 
 exp_node::exp_node(exp_t _exp_type, const string &_sysy_name, int _num,
@@ -1011,15 +1019,19 @@ void cond_exp_node::traverse()
 	if (right == nullptr) // leaf node
 	{
 		left->reduce();
+		left->new_temp();
 		code += left->code;
 		if (true_label != fall_label && false_label != fall_label) // if-else
-			code += "\tif " + left->eeyore_name + " goto l" +
-				to_string(false_label) + "\n";
+		{
+			code += "\tif " + left->eeyore_name + " == 1 goto l" +
+				to_string(true_label) + "\n";
+			code += "\tgoto l" + to_string(false_label) + "\n";
+		}
 		else if (true_label != fall_label) // if false_label
-			code += "\tif " + left->eeyore_name + " goto l" +
+			code += "\tif " + left->eeyore_name + " == 1 goto l" +
 				to_string(true_label) + "\n";
 		else if (false_label != fall_label)
-			code += "\tif !" + left->eeyore_name + " goto l" +
+			code += "\tif " + left->eeyore_name + " == 0 goto l" +
 				to_string(false_label) + "\n";
 		return;
 	}

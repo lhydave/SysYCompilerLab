@@ -2,8 +2,8 @@
 #ifndef __NODE_H__
 #define __NODE_H__
 #include <cstdio>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -137,7 +137,7 @@ struct funcdef_node : public node_basic {
 
 // struct stmt_node begin
 struct stmt_node : public node_basic {
-	stmt_node();
+	stmt_node(node_basic *_child = nullptr);
 	static int new_label();
 	virtual void update(cond_exp_node *cond, node_basic *true_stmt,
 		node_basic *false_stmt); // only for if and while!
@@ -276,7 +276,6 @@ struct cond_exp_node : public exp_node {
 	exp_node *right; // right one
 	int true_label; // true label
 	int false_label; // false label
-	int fall_label; // fall label
 
 	cond_exp_node(op_t _op, exp_node *_left, exp_node *_right);
 	void traverse();
