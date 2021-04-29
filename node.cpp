@@ -143,11 +143,7 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
 		is_const);
 	if (!is_pt && first_val)
-	{
-		if (is_array)
-			throw 0;
 		val = set_val(dim, first_val);
-	}
 	vector<int> int_val;
 	for (auto i : val)
 	{
@@ -881,6 +877,9 @@ func_call_exp_node::func_call_exp_node(
 	exp_node(EXP_FUNC_CALL)
 {
 	sysy_func_name = func_name;
+	if (sysy_func_name == now_func_name)
+		throw 0;
+
 	// tackle marcos
 	if (sysy_func_name == "starttime" || sysy_func_name == "stoptime")
 	{
