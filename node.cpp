@@ -877,8 +877,7 @@ func_call_exp_node::func_call_exp_node(
 	exp_node(EXP_FUNC_CALL)
 {
 	sysy_func_name = func_name;
-	if (sysy_func_name == now_func_name)
-		throw 0;
+	throw 0;
 
 	// tackle marcos
 	if (sysy_func_name == "starttime" || sysy_func_name == "stoptime")
