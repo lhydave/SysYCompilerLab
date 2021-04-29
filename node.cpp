@@ -514,6 +514,7 @@ void while_stmt_node::gen_code()
 	code += cond->code;
 	code += "l" + to_string(true_label) + ":\t// while true label\n";
 	code += true_stmt->code;
+	code += "\tgoto " + to_string(while_next_label) + "\n";
 	code += "l" + to_string(while_next_label) + ":\t// while next label\n";
 }
 
