@@ -1,7 +1,7 @@
 /* utility function for symbol table */
 
-#include "include/symtab.hh"
-#include "include/node.hh"
+#include "symtab.hpp"
+#include "node.hpp"
 #ifdef DEBUG
 #define dbg_printf(...)      \
 	do                       \

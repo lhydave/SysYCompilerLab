@@ -1,7 +1,7 @@
 /* utility functions for nodes */
 
-#include "include/node.hh"
-#include "include/symtab.hh"
+#include "node.hpp"
+#include "symtab.hpp"
 #include <numeric>
 #ifdef DEBUG
 #define dbg_printf(...)      \

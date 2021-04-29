@@ -1,7 +1,7 @@
 /* symbol table attributes */
 #ifndef __SYMTAB_H__
 #define __SYMTAB_H__
-#include "include/node.hh"
+#include "node.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>

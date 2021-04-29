@@ -4,8 +4,8 @@
 %option noinput
 %option nounput
 %{
-#include "include/node.hh"
-#include "SysY.tab.hh"
+#include "node.hpp"
+#include "SysY.tab.hpp"
 %}
 
 whitespace      [ \n\t\r\v\f]

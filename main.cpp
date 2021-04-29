@@ -1,6 +1,6 @@
-#include "SysY.tab.hh"
-#include "include/node.hh"
-#include "include/symtab.hh"
+#include "SysY.tab.hpp"
+#include "node.hpp"
+#include "symtab.hpp"
 #include <cstdio>
 #include <unistd.h>
 extern FILE *yyin;
