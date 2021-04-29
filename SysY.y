@@ -192,7 +192,8 @@ LAndExp
     : EqExp     { if( $1->exp_type == EXP_PTR) 
                       yyerror("pointer should not be in expression");
                   $$ = new cond_exp_node(NONE, $1, nullptr); }
-    | LAndExp '&' EqExp { $$ = new cond_exp_node(AND, $1, $3); }
+    | LAndExp '&' EqExp { $$ = new cond_exp_node(AND, $1, 
+                                new cond_exp_node(NONE, $3, nullptr)); }
 LOrExp
     : LAndExp   { if( $1->exp_type == EXP_PTR) 
                       yyerror("pointer should not be in expression");

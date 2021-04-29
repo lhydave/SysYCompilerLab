@@ -1,20 +1,47 @@
+var 48 T0
 f_main [0]
-	var T0
+	var T1
+	var T2
+	var T3
 	var t0
 	var t1
-	T0 = 10
+	var t2
+	var t3
+	var t4
+	var t5
+	var t6
+	var t7
+	var t8
+	T1 = 0
+	T2 = 0
 l0:	// while start label
-	t1 = T0 > 0
-	if t1 == 0 goto l2
+	t8 = T1 <= 5
+	if t8 == 0 goto l2
 l1:	// while true label
-	T0 = T0 - 1
-	t0 = T0 == 5
-	if t0 == 0 goto l4
-	goto l2
-l4:	// if next label
-	goto l2
+	T3 = T1
+l3:	// while start label
+	t7 = T3 >= 0
+	if t7 == 0 goto l5
+l4:	// while true label
+	t5 = T3 < 4
+	if t5 == 0 goto l7
+	t0 = T1 - T3
+	t6 = t0 < 3
+	if t6 == 0 goto l7
+	t1 = T1 - T3
+	t2 = t1 * 4
+	t3 = t2 + T3
+	t4 = t3 * 4
+	T0[t4] = T2
+	T2 = 1
+l7:	// if next label
+	T3 = T3 - 1
+	goto l3
+l5:	// while next label
+	T1 = T1 + 1
+	goto l0
 l2:	// while next label
-	return T0
+	return 0
 	return 0
 end f_main
 

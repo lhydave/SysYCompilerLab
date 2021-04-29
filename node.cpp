@@ -690,6 +690,8 @@ exp_node *array_exp_node::idx_open(const vector<exp_node *> &idx, size_t len)
 // reduce to a eeyore form - variable, number, array or pointer
 void array_exp_node::reduce()
 {
+	if (!sysy_name.empty())
+		return;
 	var_entry query;
 	if (!find_var(sysy_array_name, query)) // not defined
 	{
@@ -739,6 +741,7 @@ void array_exp_node::reduce()
 	eeyore_exp->reduce();
 	code = eeyore_exp->code;
 	eeyore_name = eeyore_exp->eeyore_name;
+	sysy_name = "?array";
 }
 
 arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
@@ -1076,14 +1079,10 @@ void cond_exp_node::traverse()
 		c_left->traverse();
 
 		c_right->false_label = false_label;
-		if (true_label != fall_label)
-			c_right->true_label = true_label;
-		else
-			c_right->true_label = stmt_node::new_label();
+		c_right->true_label = true_label;
 		c_right->traverse();
 		code += c_left->code + c_right->code;
-		if (true_label == fall_label)
-			code += "l" + to_string(c_right->true_label) + ":\n";
+		//code += "l" + to_string(c_right->true_label) + ":\n";
 	}
 	else
 		dbg_printf("should not have other operator!\n");
