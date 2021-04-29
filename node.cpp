@@ -851,7 +851,7 @@ void arith_exp_node::reduce()
 				break;
 			case LOAD:
 				eeyore_name =
-					left->eeyore_name + "[" + right->eeyore_name + "]";
+					left->eeyore_name + " [" + right->eeyore_name + "]";
 				break;
 			default: dbg_printf("%d is not a binary operator!", (int)op); break;
 			} // switch
