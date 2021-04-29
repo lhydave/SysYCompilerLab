@@ -139,8 +139,6 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	is_param = _is_param;
 
 	set_shape(first_dim);
-	if (dim.size() > 2)
-		throw 0;
 	is_array = (dim.size() != 0);
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
 		is_const);
@@ -180,6 +178,7 @@ void vardef_node::set_shape(exp_node *first_dim)
 		if (first_dim->exp_type != EXP_NUM || first_dim->num <= 0)
 		{
 			yyerror("array size in delaration must be a positive constant int");
+			throw -1;
 			temp = 1;
 		}
 		size *= temp;
