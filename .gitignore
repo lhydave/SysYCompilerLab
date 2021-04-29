@@ -1,8 +1,5 @@
 .DS_Store
 *.o
-lex.yy.cpp
-SysY.tab.cpp
-SysY.tab.hpp
 SysY.output
 .*
 *.dSYM
