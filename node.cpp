@@ -144,7 +144,8 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 		is_const);
 	if (!is_pt && first_val)
 	{
-		throw 0;
+		if (is_array)
+			throw 0;
 		val = set_val(dim, first_val);
 	}
 	vector<int> int_val;
