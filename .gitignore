@@ -7,3 +7,4 @@ SysY.tab.hpp
 SysY.tab.cpp
 .gitignore
 lex.yy.cpp
+test.out
