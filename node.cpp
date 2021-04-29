@@ -142,14 +142,25 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	is_array = (dim.size() != 0);
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
 		is_const);
-	if (!is_pt && first_val)
-		val = set_val(dim, first_val);
+	if (first_val) // initialize
+	{
+		if (is_array && first_val->exp_type != EXP_INITVAL)
+		{
+			auto msg = "array '" + name + "' must be initialized by a list";
+			yyerror(msg.c_str());
+		}
+		if (is_array)
+			val = set_val(dim, first_val->child);
+		else
+			val = set_val(dim, first_val);
+	}
 	vector<int> int_val;
 	for (auto i : val)
 	{
 		int_val.push_back(i->num);
 		dbg_printf("%d ", *int_val.rbegin());
 	}
+	int_val.insert(int_val.end(), size - int_val.size(), 0);
 	reg_var(name, is_const, is_array, is_param, dim, int_val);
 	gen_code();
 }
@@ -204,84 +215,80 @@ void vardef_node::gen_code()
 }
 
 // set the values of array
-vector<exp_node *> vardef_node::set_val(vector<int> &dim, exp_node *first_val)
+vector<exp_node *> vardef_node::set_val(vector<int> &_dim, exp_node *first_val)
 {
-	exp_node *zero = new exp_node(EXP_NUM, "", 0);
 	vector<exp_node *> ret;
-	if (dim.size() == 0) // a value !
+	auto zero_exp = new exp_node(EXP_NUM, "", 0);
+	if (dim.empty()) // an expression
 	{
-		if (!first_val || first_val->exp_type == EXP_INITVAL)
-		{
-			yyerror("expected expression");
-			ret.push_back(zero);
-		}
-		else
-		{
-			// global variable
-			if (blk_id == 0 && first_val->exp_type != EXP_NUM)
-			{
-				yyerror("global initializer must be constant");
-				ret.push_back(zero);
-			}
-			else
-			{
-				first_val->reduce();
-				first_val->new_temp();
-				ret.push_back(first_val);
-			}
-		}
+		if (first_val->exp_type ==
+			EXP_INITVAL) // an expression should not have a child
+			yyerror("expected an expression");
+		first_val->reduce();
+		first_val->new_temp();
+		if (is_const && first_val->exp_type != EXP_NUM)
+			yyerror("expected a constant expression");
+		ret.push_back(first_val);
+		return ret;
 	}
-	else // an array
+	// number of entries to fill
+	auto to_fill =
+		std::accumulate(_dim.begin(), _dim.end(), 1, std::multiplies<int>());
+	auto next_size = to_fill / _dim[0];
+	// an array
+	while (first_val)
 	{
-		int valid_dim = 1;
-		for (auto i = dim.begin() + 1; i != dim.end(); i++)
-			valid_dim *= *i;
-		while (first_val)
+		if (first_val->exp_type == EXP_INITVAL) // traverse the child
 		{
-			if (valid_dim * dim[0] <= ret.size())
+			if (dim.size() == 1)
 			{
-				yyerror("excess elements in array initializer");
-				ret.erase(ret.begin() + valid_dim * dim[0], ret.end());
+				auto msg = "too deep list initializer in '" + name + "'";
+				yyerror(msg.c_str());
+				first_val = first_val->next;
+				continue;
+			}
+			if (to_fill % next_size != 0)
+			{
+				auto msg = "unaligned initializer in '" + name + "'";
+				yyerror(msg.c_str());
+				first_val = first_val->next;
+				continue;
+			}
+			auto down_dim = _dim;
+			down_dim.erase(down_dim.begin());
+			auto res = set_val(down_dim, first_val->child);
+			to_fill -= res.size();
+			if (to_fill < 0)
+			{
+				auto msg =
+					"excessive elements in array initializer of '" + name + "'";
+				yyerror(msg.c_str());
+				to_fill += res.size();
+				ret.insert(ret.end(), res.begin(), res.begin() + to_fill);
 				return ret;
 			}
-			if (first_val->child) // preorder, child first
+			ret.insert(ret.end(), res.begin(), res.end());
+		}
+		else // an expression
+		{
+			first_val->reduce();
+			first_val->new_temp();
+			if (is_const && first_val->exp_type != EXP_NUM)
+				yyerror("expected a constant expression");
+			to_fill--;
+			if (to_fill < 0)
 			{
-				if (first_val->child->exp_type != EXP_INITVAL) // an expression
-				{
-					// global variable
-					if (blk_id == 0 && first_val->child->exp_type != EXP_NUM)
-					{
-						yyerror("global initializer must be constant");
-						ret.push_back(zero);
-					}
-					else
-					{
-						first_val->child->reduce();
-						first_val->child->new_temp();
-						ret.push_back(first_val->child);
-					}
-				}
-				else
-				{
-					if (valid_dim != 1 && ret.size() % valid_dim != 0)
-					{
-						yyerror("unaligned initializer");
-						ret.insert(
-							ret.end(), valid_dim * dim[0] - ret.size(), zero);
-						return ret;
-					}
-					vector<int> new_shape(dim);
-					new_shape.erase(new_shape.begin());
-					auto temp = set_val(new_shape, first_val->child);
-					ret.insert(ret.end(), temp.begin(), temp.end());
-				}
-			} // if end
-			else // an empty brace
-				ret.insert(ret.end(), valid_dim, zero);
-			first_val = first_val->next;
-		} // while end
-		ret.insert(ret.end(), valid_dim * dim[0] - ret.size(), zero);
-	} // else end
+				auto msg =
+					"excessive elements in array initializer of '" + name + "'";
+				yyerror(msg.c_str());
+				to_fill++;
+				return ret;
+			}
+			ret.push_back(first_val);
+		}
+		first_val = first_val->next;
+	}
+	ret.insert(ret.end(), to_fill, zero_exp); // all zero filled
 	return ret;
 }
 

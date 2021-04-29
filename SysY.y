@@ -54,8 +54,8 @@ ConstDefs
     : ConstDef     { $$ = $1; }
     | ConstDef ',' ConstDefs { $1->set_next($3); $$ = $1; }
 ConstDef
-    : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4->child); }
-    | ID ConstArray  { yyerror("constant expression must be initialized.");
+    : ID ConstArray '=' ConstInitVal  { $$ = new vardef_node($1, true, false, false, $2, $4); }
+    | ID ConstArray  { yyerror("constant expression must be initialized");
                        $$ = new vardef_node($1, true, false, false, $2, nullptr); }
 ConstArray
     : '[' ConstExp ']' ConstArray { $2->set_next($4); $$ = $2; }
@@ -63,7 +63,7 @@ ConstArray
     | '[' ConstExp error ConstArray { yyerror("expected ']'"); }
     | '[' error ']' ConstArray { yyerror("array size in delaration must be constant"); }
 ConstInitVal
-    : ConstExp  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
+    : ConstExp  { $$ = $1; }
     | '{' ConstInitVals '}' { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
     | '{' '}'   { $$ = new exp_node(EXP_INITVAL); }
     | '{' ConstInitVals error { yyerror("expected '}'"); }
@@ -82,10 +82,10 @@ VarDefs
     : VarDef    { $$ = $1; }
     | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; }
 VarDef
-    : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
+    : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4); }
     | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
 InitVal
-    : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
+    : Exp   { $$ = $1; }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
     | '{' '}' { $$ = new exp_node(EXP_INITVAL);}
     | '{' InitVals error { yyerror("expected '}'"); }

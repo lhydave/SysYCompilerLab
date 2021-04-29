@@ -116,7 +116,7 @@ struct vardef_node : public node_basic {
 		bool _is_param = false, exp_node *_first_dim = nullptr,
 		exp_node *_first_val = nullptr);
 	void set_shape(exp_node *first_dim);
-	static vector<exp_node *> set_val(vector<int> &dim, exp_node *first_val);
+	vector<exp_node *> set_val(vector<int> &_dim, exp_node *first_val);
 	void gen_code();
 };
 // struct vardef_node end
