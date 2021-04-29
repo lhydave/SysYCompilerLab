@@ -139,7 +139,7 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	is_param = _is_param;
 
 	set_shape(first_dim);
-	if (dim.size() > 1)
+	if (dim.size() > 2)
 		throw 0;
 	is_array = (dim.size() != 0);
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
