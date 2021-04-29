@@ -421,15 +421,28 @@ exp_stmt_node::exp_stmt_node(exp_node *_exp_stmt)
 {
 	exp_stmt = _exp_stmt;
 	exp_stmt->reduce();
-	exp_stmt->new_temp();
 	gen_code();
 }
 
 // generate code for assignment
 void exp_stmt_node::gen_code()
 {
-	if (!exp_stmt->eeyore_name.empty())
-		code = exp_stmt->code;
+	if (exp_stmt->exp_type == EXP_FUNC_CALL)
+	{
+		auto func_exp_stmt = static_cast<func_call_exp_node *>(exp_stmt);
+		func_entry query;
+		find_func(func_exp_stmt->sysy_func_name, query);
+		if (query.ret_type == INT)
+		{
+			exp_stmt->new_temp();
+			code = exp_stmt->code;
+		}
+		else
+		{
+			code = exp_stmt->code;
+			code += "\t" + exp_stmt->eeyore_name + "\n";
+		}
+	}
 }
 
 if_stmt_node::if_stmt_node()
@@ -619,7 +632,6 @@ void exp_node::reduce()
 	if (exp_type == EXP_NUM)
 	{
 		eeyore_name = to_string(num);
-		sysy_name = "?num";
 		dbg_printf("eeyore_name in exp_node: %s\n", eeyore_name.c_str());
 	}
 	else if (exp_type == EXP_VAR)
@@ -631,7 +643,6 @@ void exp_node::reduce()
 		{
 			exp_type = EXP_NUM;
 			eeyore_name = to_string(query.val[0]);
-			sysy_name = "?num";
 		}
 	}
 }
@@ -758,6 +769,8 @@ arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 // reduce the expression to a simpler form, if can't, create a temp name
 void arith_exp_node::reduce()
 {
+	if (!sysy_name.empty())
+		return;
 	assert(left->exp_type != EXP_INITVAL);
 	if (right) // binary operator
 	{
@@ -782,14 +795,11 @@ void arith_exp_node::reduce()
 			default: dbg_printf("%d is not a binary operator!", (int)op); break;
 			}
 			eeyore_name = to_string(num);
-			sysy_name = "?num";
 		}
 		else
 		{
-			if (left->sysy_name.empty()) // delay assignment
-				left->new_temp();
-			if (right->sysy_name.empty()) // delay assignment
-				right->new_temp();
+			left->new_temp();
+			right->new_temp();
 			code = right->code + left->code;
 			switch (op)
 			{
@@ -847,12 +857,10 @@ void arith_exp_node::reduce()
 			default: dbg_printf("%d is not a unary operator!", (int)op); break;
 			}
 			eeyore_name = to_string(num);
-			sysy_name = "?num";
 		}
 		else
 		{
-			if (left->sysy_name.empty()) // delay assignment
-				left->new_temp();
+			left->new_temp();
 			code = left->code;
 			switch (op)
 			{
@@ -862,6 +870,7 @@ void arith_exp_node::reduce()
 			}
 		}
 	}
+	sysy_name = "?exp_arith";
 }
 
 func_call_exp_node::func_call_exp_node(
@@ -996,7 +1005,6 @@ void func_call_exp_node::reduce()
 {
 	if (!sysy_name.empty())
 		return;
-	sysy_name = "?func_call";
 	for (auto i : params)
 		code += i->code;
 	dbg_printf("reduce size: %lu\n", params.size());
@@ -1006,16 +1014,20 @@ void func_call_exp_node::reduce()
 		code += "\tparam " + i->eeyore_name + "\n";
 	}
 	eeyore_name = "call f_" + sysy_func_name;
+	sysy_name = "?func_call";
 }
 
 // allocate a new temporary name for func call
 void func_call_exp_node::new_temp()
 {
+	if (temped || exp_type == EXP_NUM || exp_type == EXP_VAR)
+		return;
 	check_ret_type(this);
 	sysy_name = "#t" + to_string(temp_id);
 	eeyore_name = "t" + to_string(temp_id++);
 	code += "\t" + eeyore_name + " = call f_" + sysy_func_name + "\n";
 	reg_var(sysy_name);
+	temped = true;
 	return;
 }
 
@@ -1082,7 +1094,7 @@ void cond_exp_node::traverse()
 		c_right->true_label = true_label;
 		c_right->traverse();
 		code += c_left->code + c_right->code;
-		//code += "l" + to_string(c_right->true_label) + ":\n";
+		// code += "l" + to_string(c_right->true_label) + ":\n";
 	}
 	else
 		dbg_printf("should not have other operator!\n");

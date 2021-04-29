@@ -223,7 +223,8 @@ struct exp_node : public node_basic {
 	string eeyore_name; // name of the expression in the eeyore
 	op_t op = NONE; // operation of the expression
 	int num = 0; // number of the expression
-	exp_t exp_type;
+	exp_t exp_type; // expression type
+	int temped = false; // has allocated a temp
 
 	exp_node(exp_t _exp_type, const string &_sysy_name = "", int _num = 0,
 		op_t _op = NONE, exp_node *_child = nullptr);

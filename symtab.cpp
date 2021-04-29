@@ -61,9 +61,9 @@ void init_tables()
 	temp = var_entry(false, false, true, vector<int>());
 	func_table["putint"].params.push_back(temp);
 
-	reg_func("putchar", VOID);
+	reg_func("putch", VOID);
 	temp = var_entry(false, false, true, vector<int>());
-	func_table["putchar"].params.push_back(temp);
+	func_table["putch"].params.push_back(temp);
 
 	reg_func("putarray", VOID);
 	temp = var_entry(false, false, true, vector<int>());
