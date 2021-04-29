@@ -287,8 +287,6 @@ funcdef_node::funcdef_node(
 {
 	blk = _blk;
 	name = string(_name);
-	if (name != "main")
-		throw 0;
 	dbg_printf("def a func named %s\n", _name);
 	ret_type = _ret_type;
 	add_ret(blk != nullptr);

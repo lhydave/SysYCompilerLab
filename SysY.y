@@ -44,7 +44,7 @@ Decl
     : ConstDecl { $$ = $1; }
     | VarDecl { $$ = $1; }
 ConstDecl : CONST DTYPE ConstDefs ';'  { if($2 != INT) yyerror("variable type must be int");
-                                         $$ = $3;
+                                         $$ = $3; throw 0;
                                         }
     | CONST error ConstDefs ';' { yyerror("missing type in declaration"); }
     | CONST DTYPE ConstDefs error { yyerror("expected ';'"); }
