@@ -83,7 +83,7 @@ VarDefs
     | VarDef ',' VarDefs  { $1->set_next($3); $$ = $1; }
 VarDef
     : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
-    | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); throw 0; }
+    | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
 InitVal
     : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
