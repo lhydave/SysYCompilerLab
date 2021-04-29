@@ -139,6 +139,8 @@ vardef_node::vardef_node(const char *_name, bool _is_const, bool _is_pt,
 	is_param = _is_param;
 
 	set_shape(first_dim);
+	if (dim.size() > 1)
+		throw 0;
 	is_array = (dim.size() != 0);
 	dbg_printf("is_array: %d, is_param: %d, is_const: %d\n", is_array, is_param,
 		is_const);
@@ -419,7 +421,6 @@ assign_stmt_node::assign_stmt_node(exp_node *_lval, exp_node *_assign_exp)
 // generate code for assignment
 void assign_stmt_node::gen_code()
 {
-	throw -1;
 	code = assign_exp->code + lval->code;
 
 	auto r_lval = static_cast<array_exp_node *>(lval);
