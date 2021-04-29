@@ -1,5 +1,5 @@
-#include "SysY.tab.hpp"
 #include "node.hpp"
+#include "SysY.tab.hpp"
 #include "symtab.hpp"
 #include <cstdio>
 #include <unistd.h>
