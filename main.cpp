@@ -15,13 +15,14 @@ int main(int argc, char **argv)
 	char c;
 	bool gen_eeyore = false;
 	FILE *gen_out = yyin = nullptr;
+	string out_name;
 	while ((c = getopt(argc, argv, optstring)) != EOF)
 	{
 		switch (c)
 		{
 		case 'S': gen_eeyore = true; break;
 		case 'e': yyin = fopen(optarg, "r"); break;
-		case 'o': gen_out = fopen(optarg, "w"); break;
+		case 'o': out_name = optarg; break;
 		default: printf("Not support yet!\n"); return 0;
 		}
 	}
@@ -48,6 +49,9 @@ int main(int argc, char **argv)
 	} while (!feof(yyin));
 	check_main();
 	if (!has_err) // good!
+	{
+		gen_out = fopen(out_name.c_str(), "w");
 		fprintf(gen_out, "%s", root->code.c_str());
+	}
 	return 0;
 }
