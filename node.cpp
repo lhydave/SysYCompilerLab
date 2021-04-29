@@ -1047,6 +1047,7 @@ void func_call_exp_node::new_temp()
 cond_exp_node::cond_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 	exp_node(EXP_COND)
 {
+	throw -1;
 	op = _op;
 	left = _left;
 	right = _right;
@@ -1107,6 +1108,7 @@ void cond_exp_node::traverse()
 		c_right->true_label = true_label;
 		c_right->traverse();
 		code += c_left->code + c_right->code;
+		//code += "l" + to_string(c_right->true_label) + ":\n";
 	}
 	else
 	{
