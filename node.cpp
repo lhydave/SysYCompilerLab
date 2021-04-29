@@ -701,6 +701,7 @@ exp_node *array_exp_node::idx_open(const vector<exp_node *> &idx, size_t len)
 	auto size = idx.size();
 	for (auto i = 1; i < size; i++)
 	{
+		dbg_printf("idx num: %d,\n", idx[i]->num);
 		ret = new arith_exp_node(MUL, ret, scale);
 		ret = new arith_exp_node(ADD, ret, idx[i]);
 	}
@@ -813,7 +814,7 @@ void arith_exp_node::reduce()
 		{
 			left->new_temp();
 			right->new_temp();
-			code = right->code + left->code;
+			code = left->code + right->code;
 			switch (op)
 			{
 			case EQ:
@@ -1106,8 +1107,10 @@ void cond_exp_node::traverse()
 		c_right->true_label = true_label;
 		c_right->traverse();
 		code += c_left->code + c_right->code;
-		// code += "l" + to_string(c_right->true_label) + ":\n";
 	}
 	else
+	{
 		dbg_printf("should not have other operator!\n");
+		throw -1;
+	}
 }

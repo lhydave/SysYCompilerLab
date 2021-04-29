@@ -1,0 +1,11 @@
+int f(int c)
+{
+    return c;
+}
+int main()
+{
+    int a[2][2][2][2][2][2][2];
+    int a1,a2,a3,a4,a5,a6,a7;
+    int b = a[f(a1)][f(a2)][f(a3)][f(a4)][f(a5)][f(a6)][f(a7)];
+    return 0;
+}
