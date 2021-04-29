@@ -85,14 +85,14 @@ VarDef
     : ID ConstArray '=' InitVal { $$=new vardef_node($1, false, false, false, $2, $4->child); }
     | ID ConstArray { $$ = new vardef_node($1, false, false, false, $2, nullptr); }
 InitVal
-    : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
+    : Exp   { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); if($1->exp_type!=EXP_NUM) throw 0; }
     | '{' InitVals '}'  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
     | '{' '}' { $$ = new exp_node(EXP_INITVAL);}
     | '{' InitVals error { yyerror("expected '}'"); }
     | '{' error { yyerror("expected '}'"); }
 InitVals
     : InitVal   { $$ = $1; }
-    | InitVal ',' InitVals  { $1->set_next($3); $$ = $1; throw 0; }
+    | InitVal ',' InitVals  { $1->set_next($3); $$ = $1; }
 
 FuncDef
     : DTYPE ID  '('  Minc_func FuncFParams ')'  Block   { $$ = new funcdef_node($2, $1, $7); }
