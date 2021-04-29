@@ -735,7 +735,11 @@ void array_exp_node::reduce()
 	}
 	// an array
 	if (sysy_idx.size() > query.dim.size()) // an error
+	{
 		yyerror("subscripted value is not an array");
+		sysy_name = "?array";
+		return;
+	}
 	else if (sysy_idx.size() == query.dim.size()) // an array
 	{
 		eeyore_exp = idx_open(sysy_idx, int_size);
