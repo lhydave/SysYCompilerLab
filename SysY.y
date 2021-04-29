@@ -65,7 +65,7 @@ ConstArray
 ConstInitVal
     : ConstExp  { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $1); }
     | '{' ConstInitVals '}' { $$ = new exp_node(EXP_INITVAL, "", 0, NONE, $2); }
-    | '{' '}'   { $$ = new exp_node(EXP_INITVAL); }
+    | '{' '}'   { $$ = new exp_node(EXP_INITVAL); throw 0; }
     | '{' ConstInitVals error { yyerror("expected '}'"); }
     | error { yyerror("expected constant expression"); }
 ConstInitVals
