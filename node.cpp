@@ -178,7 +178,6 @@ void vardef_node::set_shape(exp_node *first_dim)
 		if (first_dim->exp_type != EXP_NUM || first_dim->num <= 0)
 		{
 			yyerror("array size in delaration must be a positive constant int");
-			throw -1;
 			temp = 1;
 		}
 		size *= temp;

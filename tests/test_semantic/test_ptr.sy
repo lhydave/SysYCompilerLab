@@ -1,0 +1,10 @@
+int f(int a[][2])
+{
+    return a[1][1];
+}
+
+int main()
+{
+    int b[2][2][4][2];
+    return f(b[3][2]);
+}
