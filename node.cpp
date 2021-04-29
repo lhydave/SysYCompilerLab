@@ -89,7 +89,7 @@ int str2num(const char *s, int base)
 			val = val * base + (s[i] - '0');
 		else if (s[i] >= 'a' && s[i] <= 'f')
 			val = val * base + (s[i] - 'a') + 10;
-		else if (s[i] >= 'A' && s[i] < 'F')
+		else if (s[i] >= 'A' && s[i] <= 'F')
 			val = val * base + (s[i] - 'A') + 10;
 		else
 			return -1;
