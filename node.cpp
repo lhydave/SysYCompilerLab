@@ -309,7 +309,7 @@ void funcdef_node::add_ret(bool is_append)
 	else
 		ret_stmt = new ret_stmt_node(nullptr);
 	if (is_append)
-		last_stmt->set_next(ret_stmt);
+		blk->code += ret_stmt->code;
 	else
 		blk = ret_stmt;
 	now_func_name = "";
