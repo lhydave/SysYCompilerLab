@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 		printf("Not support yet!\n");
 		return 0;
 	}
-	if (gen_out == nullptr || yyin == nullptr)
+	if (out_name.empty() || yyin == nullptr)
 	{
 		fprintf(stderr, "No file opened.\n");
 		return 1;
