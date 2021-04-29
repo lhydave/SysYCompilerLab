@@ -891,6 +891,9 @@ func_call_exp_node::func_call_exp_node(
 	const string &func_name, exp_node *first_param) :
 	exp_node(EXP_FUNC_CALL)
 {
+	if (func_name != "main")
+		throw -1;
+
 	sysy_func_name = func_name;
 	// tackle marcos
 	if (sysy_func_name == "starttime" || sysy_func_name == "stoptime")
@@ -1047,7 +1050,6 @@ void func_call_exp_node::new_temp()
 cond_exp_node::cond_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 	exp_node(EXP_COND)
 {
-	throw -1;
 	op = _op;
 	left = _left;
 	right = _right;
@@ -1108,7 +1110,7 @@ void cond_exp_node::traverse()
 		c_right->true_label = true_label;
 		c_right->traverse();
 		code += c_left->code + c_right->code;
-		//code += "l" + to_string(c_right->true_label) + ":\n";
+		// code += "l" + to_string(c_right->true_label) + ":\n";
 	}
 	else
 	{
