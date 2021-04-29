@@ -743,6 +743,7 @@ void array_exp_node::reduce()
 	}
 	else if (sysy_idx.size() == query.dim.size()) // an array
 	{
+		throw -1;
 		eeyore_exp = idx_open(sysy_idx, int_size);
 		eeyore_exp = new arith_exp_node(
 			MUL, eeyore_exp, new exp_node(EXP_NUM, "", int_size));
@@ -783,7 +784,6 @@ arith_exp_node::arith_exp_node(op_t _op, exp_node *_left, exp_node *_right) :
 // reduce the expression to a simpler form, if can't, create a temp name
 void arith_exp_node::reduce()
 {
-	throw -1;
 	if (!sysy_name.empty())
 		return;
 	assert(left->exp_type != EXP_INITVAL);
