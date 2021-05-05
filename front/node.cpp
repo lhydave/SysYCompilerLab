@@ -489,18 +489,18 @@ void if_stmt_node::gen_code()
 
 	if (has_else)
 	{
-		code += "l" + to_string(true_label) + ":\t// if true label\n";
+		code += "l" + to_string(true_label) + "\n";
 		code += true_stmt->code;
 		auto if_next_label = new_label();
 		code += "\tgoto l" + to_string(if_next_label) + "\n";
-		code += "l" + to_string(false_label) + ":\t// if false label\n";
+		code += "l" + to_string(false_label) + ":\n";
 		code += false_stmt->code;
-		code += "l" + to_string(if_next_label) + ":\t// if next label\n";
+		code += "l" + to_string(if_next_label) + ":\n";
 	}
 	else
 	{
 		code += true_stmt->code;
-		code += "l" + to_string(false_label) + ":\t// if next label\n";
+		code += "l" + to_string(false_label) + ":\n";
 	}
 }
 
@@ -532,12 +532,12 @@ void while_stmt_node::update(
 // generate code for while statement
 void while_stmt_node::gen_code()
 {
-	code = "l" + to_string(while_start_label) + ":\t// while start label\n";
+	code = "l" + to_string(while_start_label) + ":\n";
 	code += cond->code;
-	code += "l" + to_string(true_label) + ":\t// while true label\n";
+	code += "l" + to_string(true_label) + ":\n";
 	code += true_stmt->code;
 	code += "\tgoto l" + to_string(while_start_label) + "\n";
-	code += "l" + to_string(while_next_label) + ":\t// while next label\n";
+	code += "l" + to_string(while_next_label) + ":\n";
 }
 
 goto_stmt_node::goto_stmt_node(bool _is_break)
