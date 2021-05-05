@@ -6,7 +6,9 @@
 extern FILE *yyin;
 int yyparse(void);
 int yylex(void);
+namespace sysY_AST {
 node_basic *root; // root of the parse tree
+}
 bool has_err = false; // true if an error occurred
 int main(int argc, char **argv)
 {
@@ -36,16 +38,16 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	// initialize symbol tables
-	init_tables();
+	sysY_AST::init_tables();
 	do
 	{
 		yyparse();
 	} while (!feof(yyin));
-	check_main();
+	sysY_AST::check_main();
 	if (!has_err) // good!
 	{
 		gen_out = fopen(out_name.c_str(), "w");
-		fprintf(gen_out, "%s", root->code.c_str());
+		fprintf(gen_out, "%s", sysY_AST::root->code.c_str());
 	}
 	return 0;
 }

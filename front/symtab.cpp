@@ -15,6 +15,8 @@
 #define dbg_printf(...)
 #endif
 
+namespace sysY_AST {
+
 vector<var_table_t> var_stack; // variable table stack
 func_table_t func_table; // function table stack
 string now_func_name; // name of current function
@@ -216,3 +218,4 @@ bool check_main()
 	}
 	return valid;
 }
+} // namespace sysY_AST

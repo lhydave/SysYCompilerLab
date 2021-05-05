@@ -31,6 +31,7 @@ void yyerror(const char *msg, int lineno)
 	fprintf(stderr, "error happens near line %d: %s\n", lineno, msg);
 }
 
+namespace sysY_AST{
 // allocate a new space for string
 char *namestr(const char *s)
 {
@@ -1116,3 +1117,4 @@ void cond_exp_node::traverse()
 		throw -1;
 	}
 }
+} // namespace sysY_AST

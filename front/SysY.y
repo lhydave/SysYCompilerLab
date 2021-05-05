@@ -14,6 +14,7 @@ int yywrap()
 {
     return 1;
 }
+using namespace sysY_AST;
 %}
 %token CONST IF ELSE WHILE CONTINUE BREAK RETURN
 %token <name> ID

@@ -10,6 +10,13 @@
 using std::string;
 using std::to_string;
 using std::vector;
+
+// error reporting
+extern int yylineno;
+extern bool has_err;
+void yyerror(const char *msg, int lineno = yylineno);
+
+namespace sysY_AST {
 enum data_t { VOID, INT };
 enum op_t {
 	NONE,
@@ -71,16 +78,12 @@ typedef union {
 	exp_node *exp_basic;
 	cond_exp_node *cond_exp;
 } yylval_t;
-#define YYSTYPE yylval_t
+#define YYSTYPE sysY_AST::yylval_t
 
 // global variables
 extern node_basic *root;
 extern int blk_id;
 extern bool is_cond;
-// error reporting
-extern int yylineno;
-extern bool has_err;
-void yyerror(const char *msg, int lineno = yylineno);
 
 // conversion
 char *namestr(const char *s);
@@ -280,5 +283,5 @@ struct cond_exp_node : public exp_node {
 	void traverse();
 };
 // struct cond_exp_node end
-
+} // namespace sysY_AST
 #endif // define __ATTR_H__ end

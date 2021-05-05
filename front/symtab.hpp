@@ -8,6 +8,7 @@
 using std::string;
 using std::unordered_map;
 using std::vector;
+namespace sysY_AST{
 struct var_entry;
 struct func_entry;
 using var_table_t = unordered_map<string, var_entry>;
@@ -65,5 +66,5 @@ void reg_func(const char *_name, data_t ret_type);
 bool find_func(const string &name, func_entry &store);
 bool find_func(const string &name);
 bool check_main();
-
+} // namespace sysY_AST
 #endif // __SYMTAB_H__ end

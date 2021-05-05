@@ -6,6 +6,7 @@
 %{
 #include "node.hpp"
 #include "SysY.tab.hpp"
+using namespace sysY_AST;
 %}
 
 whitespace      [ \n\t\r\v\f]
