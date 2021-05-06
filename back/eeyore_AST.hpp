@@ -53,8 +53,8 @@ struct num_node;
 
 extern unordered_map<string, func_entry> func_table;
 extern string now_func;
-void reg_func(const string &_eeyore_name, int param_n);
-void reg_var(const string &_eeyore_name, int _size);
+void reg_func(const string &eeyore_name, int param_n);
+void reg_var(const string &eeyore_name, int size);
 
 extern unordered_map<int, stmt_node> label_table;
 
