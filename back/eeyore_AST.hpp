@@ -60,7 +60,6 @@ extern unordered_map<int, stmt_node> label_table;
 
 void parseline();
 
-
 struct var_entry {
 	string eeyore_name; // name in eeyore
 	int size; // space to use
