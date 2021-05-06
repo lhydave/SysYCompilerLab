@@ -35,7 +35,7 @@ enum op_t {
 	AND,
 	OR,
 	NOT,
-	LOAD
+	MEM
 };
 enum exp_t {
 	EXP_TEMP,

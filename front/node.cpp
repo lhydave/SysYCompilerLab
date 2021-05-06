@@ -490,7 +490,7 @@ void if_stmt_node::gen_code()
 
 	if (has_else)
 	{
-		code += "l" + to_string(true_label) + "\n";
+		code += "l" + to_string(true_label) + ":\n";
 		code += true_stmt->code;
 		auto if_next_label = new_label();
 		code += "\tgoto l" + to_string(if_next_label) + "\n";
@@ -749,7 +749,7 @@ void array_exp_node::reduce()
 		eeyore_exp = new arith_exp_node(
 			MUL, eeyore_exp, new exp_node(EXP_NUM, "", int_size));
 		auto array_id = new exp_node(EXP_VAR, sysy_array_name);
-		eeyore_exp = new arith_exp_node(LOAD, array_id, eeyore_exp);
+		eeyore_exp = new arith_exp_node(MEM, array_id, eeyore_exp);
 	}
 	else // a pointer
 	{
@@ -852,7 +852,7 @@ void arith_exp_node::reduce()
 			case MOD:
 				eeyore_name = left->eeyore_name + " % " + right->eeyore_name;
 				break;
-			case LOAD:
+			case MEM:
 				eeyore_name =
 					left->eeyore_name + " [" + right->eeyore_name + "]";
 				break;
