@@ -58,7 +58,7 @@ void reg_var(const string &eeyore_name, int size);
 
 extern unordered_map<int, stmt_node> label_table;
 
-void parseline();
+void build_AST();
 
 struct var_entry {
 	string eeyore_name; // name in eeyore
@@ -71,6 +71,7 @@ struct var_entry {
 struct func_entry {
 	string eeyore_name; // name in eeyore
 	unordered_map<string, var_entry> temps; // temporary variable
+	stmt_node func_def; // definition of the function
 	int param_n; // number of parameters
 
 	func_entry() = default;
@@ -80,6 +81,7 @@ struct func_entry {
 struct stmt_node {
 	exp_t exp_type = EXP_NONE; // type of the expression, for RVal only
 	int label = -1; // label of the statement
+	shared_ptr<stmt_node> next; // next statement
 };
 
 struct assign_node : public stmt_node {
