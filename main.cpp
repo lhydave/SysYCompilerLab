@@ -1,6 +1,7 @@
 #include "node.hpp"
 #include "SysY.tab.hpp"
 #include "symtab.hpp"
+#include "eeyore_AST.hpp"
 #include <cstdio>
 #include <unistd.h>
 extern FILE *yyin;
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
 	{
 		gen_out = fopen(out_name.c_str(), "w");
 		fprintf(gen_out, "%s", sysY_AST::root->code.c_str());
+		eeyore_AST::build_AST(sysY_AST::root->code);
 	}
 	return 0;
 }
