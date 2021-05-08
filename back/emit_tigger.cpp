@@ -4,15 +4,15 @@ using std::to_string;
 namespace tigger {
 
 // emit global variable
-string emit_global_var(const string &name, int num, int size, bool is_array)
+string emit_global_var(int No, int num, int size, bool is_array)
 {
 	if (is_array)
-		return name + " = malloc " + to_string(size) + "\n";
-	return name + " = " + to_string(num) + "\n";
+		return to_string(No) + " = malloc " + to_string(size) + "\n";
+	return to_string(No) + " = " + to_string(num) + "\n";
 }
 
 // emit the function beginning
-string emit_func_begin(const string &func, int param_n, int stack_n)
+string emit_func_begin(const string &func, int param_n, size_t stack_n)
 {
 	return func + " [" + to_string(param_n) + "] [" + to_string(stack_n) +
 		"]\n";
@@ -21,7 +21,7 @@ string emit_func_begin(const string &func, int param_n, int stack_n)
 // emit the function end
 string emit_func_end(const string &func)
 {
-	return "end " + func + "\n";
+	return "end " + func + "\n\n";
 }
 
 // emit assignment

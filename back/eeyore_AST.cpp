@@ -1,6 +1,8 @@
 /* build the AST for eeyore */
 #include "eeyore_AST.hpp"
+#include <algorithm>
 #include <cctype>
+#include <functional>
 #include <iostream>
 #include <queue>
 #include <sstream>
@@ -11,18 +13,21 @@ using std::queue;
 namespace eeyore_AST {
 
 unordered_map<string, func_entry> func_table; // function table
-unordered_map<int, shared_ptr<stmt_node>> label_table; // label table
 
-static queue<int> labels; // unregistered labels
+static unordered_map<int, shared_ptr<stmt_node>>
+	label2stmt; // label to statment
+static vector<shared_ptr<stmt_node>> gotos; // goto statements
+static vector<int> labels; // unregistered labels
 static queue<shared_ptr<op_node>> params; // unregistered parameters
 static string now_func; // now function name
 static std::istringstream eeyore_f; // eeyore string file
 
+static void reg_func(const string &eeyore_name, int param_n);
+static void reg_var(const string &eeyore_name, int size);
+static void simple_label();
 static shared_ptr<op_node> parse_var_num(const string &s);
 static shared_ptr<op_node> parseop(const string &line);
 static bool parseline();
-static void reg_func(const string &eeyore_name, int param_n);
-static void reg_var(const string &eeyore_name, int size);
 
 // register a new function
 static void reg_func(const string &eeyore_name, int param_n)
@@ -33,7 +38,20 @@ static void reg_func(const string &eeyore_name, int param_n)
 // register a variable
 static void reg_var(const string &eeyore_name, int size)
 {
-	func_table[now_func].temps[eeyore_name] = var_entry(eeyore_name, size);
+	if (size == -1) // variable
+		func_table[now_func].temps[eeyore_name] = var_entry(eeyore_name);
+	else // array
+		func_table[now_func].temps[eeyore_name] =
+			var_entry(eeyore_name, size, true);
+}
+
+// simplify the label table
+void simple_label()
+{
+	for (auto i : gotos)
+		i->label = label2stmt[i->label]->label;
+	gotos.clear();
+	label2stmt.clear();
 }
 
 // parse variable and number
@@ -142,13 +160,21 @@ static bool parseline()
 		break;
 	}
 	// function end
-	case 'e': now_func = ""; break;
+	case 'e':
+		simple_label();
+		now_func = "";
+		break;
 	// variable
 	case 'v':
 	{
-		string var;
-		int size;
-		line_f >> var >> size;
+		string temp, var;
+		int size = -1;
+		line_f >> temp;
+		line_f.get();
+		if (isdigit(line_f.peek()))
+			line_f >> size >> var;
+		else
+			line_f >> var;
 		reg_var(var, size);
 		break;
 	}
@@ -158,7 +184,7 @@ static bool parseline()
 		int label;
 		char ch;
 		line_f >> ch >> label;
-		labels.push(label);
+		labels.push_back(label);
 		break;
 	}
 	// an inner statement
@@ -177,13 +203,14 @@ static bool parseline()
 			int label;
 			line_f >> temp1 >> temp2 >> label;
 			stmt = make_shared<goto_node>(label);
+			gotos.push_back(stmt);
 			break;
 		}
 		// variable
 		case 'v':
 		{
 			string temp, name;
-			int size = 4;
+			int size = -1;
 			line_f >> temp;
 			line_f.get();
 			if (isdigit(line_f.peek()))
@@ -241,6 +268,7 @@ static bool parseline()
 			line_f >> temp >> tempc >> label;
 			auto cond_pt = parseop(cond);
 			stmt = make_shared<goto_node>(label, cond_pt);
+			gotos.push_back(stmt);
 			break;
 		}
 		// assignment
@@ -260,17 +288,20 @@ static bool parseline()
 		if (stmt) // assign the labels and push the statement
 		{
 			func_table[now_func].funcbody.push_back(stmt);
-			while (!labels.empty())
-			{
-				auto label = labels.front();
-				labels.pop();
-				label_table[label] = stmt;
-			}
+			stmt->label = *std::min_element(
+				labels.begin(), labels.end(), std::greater<int>());
+			labels.clear();
 		}
 	} // case '\t'
 	default: break;
 	} // switch
 	return true;
+}
+
+// judge whether the variable is global
+bool is_global(const string &name)
+{
+	return func_table[""].temps.count(name) != 0;
 }
 
 // build the AST for eeyore
@@ -279,9 +310,8 @@ void build_AST(const string &eeyore_code)
 	eeyore_f = std::istringstream(eeyore_code);
 	now_func = "";
 	func_table.clear();
-	label_table.clear();
-	while (!labels.empty())
-		labels.pop();
+	label2stmt.clear();
+	labels.clear();
 	while (!params.empty())
 		params.pop();
 	// initialize global var_table

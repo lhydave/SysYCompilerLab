@@ -22,6 +22,10 @@ enum exp_t {
 	EXP_NUM,
 	EXP_CALL
 };
+
+// statement type
+enum stmt_t { STMT_ASSIGN, STMT_GOTO, STMT_RET, STMT_CALL };
+
 struct var_entry;
 struct func_entry;
 struct stmt_node;
@@ -34,17 +38,20 @@ struct var_node;
 struct num_node;
 
 extern unordered_map<string, func_entry> func_table;
-extern unordered_map<int, shared_ptr<stmt_node>> label_table;
 
+bool is_global(const string &name);
 void build_AST(const string &eeyore_code);
 
 struct var_entry {
 	string eeyore_name; // name in eeyore
 	int size; // space to use
+	bool is_array; // true if it is array
 
 	var_entry() = default;
-	var_entry(const string &_eeyore_name, int _size = 4) :
-		eeyore_name(_eeyore_name), size(_size)
+	var_entry(
+		const string &_eeyore_name, int _size = 4, bool _is_array = false) :
+		eeyore_name(_eeyore_name),
+		size(_size), is_array(_is_array)
 	{
 	}
 };
@@ -63,7 +70,8 @@ struct func_entry {
 };
 
 struct stmt_node {
-	int label = -1; // label of the statement
+	stmt_t stmt_type;
+	int label = -1;
 };
 
 struct assign_node : public stmt_node {

@@ -10,8 +10,8 @@ using std::string;
 namespace tigger {
 
 string emit_global_var(
-	const string &name, int num = 0, int size = 4, bool is_array = false);
-string emit_func_begin(const string &func, int param_n, int stack_n);
+	int No, int num = 0, int size = 4, bool is_array = false);
+string emit_func_begin(const string &func, int param_n, size_t stack_n);
 string emit_func_end(const string &func);
 string emit_exp_assign(const string &lval, const string &left,
 	const string &op = "", const string &right = "");
