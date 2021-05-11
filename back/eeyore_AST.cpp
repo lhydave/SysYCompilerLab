@@ -349,7 +349,6 @@ void build_AST(const string &eeyore_code)
 	// parseline!
 	while (parseline())
 		;
-	throw 0;
 	dbg_printf("\n");
 }
 } // namespace eeyore_AST
