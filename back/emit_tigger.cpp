@@ -7,8 +7,8 @@ namespace tigger {
 string emit_global_var(int No, int num, int size, bool is_array)
 {
 	if (is_array)
-		return to_string(No) + " = malloc " + to_string(size) + "\n";
-	return to_string(No) + " = " + to_string(num) + "\n";
+		return "v" + to_string(No) + " = malloc " + to_string(size) + "\n";
+	return "v" + to_string(No) + " = " + to_string(num) + "\n";
 }
 
 // emit the function beginning

@@ -53,6 +53,7 @@ struct var_node;
 struct num_node;
 
 extern unordered_map<string, func_entry> func_table;
+extern vector<string> funcnames;
 
 bool is_global(const string &name);
 bool is_param(const string &name);

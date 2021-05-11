@@ -56,12 +56,11 @@ void gen_code()
 		global_cnt++;
 		dbg_printf("global var %s init\n", j.eeyore_name.c_str());
 	}
-	func_table.erase("");
 	if (!globals.empty())
 		tigger_dst << "\n";
 	// generate functions
-	for (auto i : func_table)
-		gen_func(i.second);
+	for (auto i : funcnames)
+		gen_func(func_table[i]);
 }
 
 // calculate the stack space needed for function
@@ -102,7 +101,11 @@ void gen_func(const func_entry &func)
 		dbg_printf("temp var %s mapped\n", i.second.eeyore_name.c_str());
 	}
 	for (auto i = 0; i < func.param_n; i++)
-		var2no[eeyore_param_prefix + to_string(i)] = posi++;
+	{
+		var2no[eeyore_param_prefix + to_string(i)] = posi;
+		tigger_dst << emit_store(param_prefix + to_string(i), posi);
+		posi++;
+	}
 	for (auto i : func.funcbody)
 		gen_stmt(i);
 	tigger_dst << emit_func_end(func.eeyore_name);
@@ -207,7 +210,10 @@ void gen_assign(
 		tigger_dst << emit_exp_assign(left, right);
 		return;
 	}
-	string left = alloc_temp_reg(lval, 0);
+	auto var = std::static_pointer_cast<var_node>(lval);
+	string left = temp_prefix + to_string(0);
+	if (!is_global(var->eeyore_name))
+		left = alloc_temp_reg(lval, 0);
 	gen_assign(left, rval);
 	dealloc_temp_reg(lval, 0);
 }
@@ -253,11 +259,13 @@ void gen_assign(const string &lval, const shared_ptr<op_node> &rval)
 // generate tigger code for array
 void gen_array(const shared_ptr<op_node> &temp, int tempid1, int tempid2)
 {
+	dbg_printf("gen array begin...\n");
 	auto base = std::static_pointer_cast<var_node>(temp->left);
 	auto temp1 = temp_prefix + to_string(tempid1);
 	auto temp2 = temp_prefix + to_string(tempid2);
 	if (is_global(base->eeyore_name))
-		tigger_dst << emit_loadaddr(base->eeyore_name, temp1);
+		tigger_dst << emit_loadaddr(
+			global_prefix + to_string(global_var2no[base->eeyore_name]), temp1);
 	else
 		tigger_dst << emit_load(var2no[base->eeyore_name], temp1);
 	auto shift = alloc_temp_reg(temp->right, tempid2);
@@ -275,7 +283,7 @@ void gen_unary(const shared_ptr<op_node> &temp, int tempid)
 void gen_binary(const shared_ptr<op_node> &temp, int tempid1, int tempid2)
 {
 	auto reg1 = alloc_temp_reg(temp->left, tempid1);
-	auto reg2 = alloc_temp_reg(temp->left, tempid2);
+	auto reg2 = alloc_temp_reg(temp->right, tempid2);
 	tigger_dst << emit_exp_assign(reg1, reg1 + " " + temp->op + " " + reg2);
 }
 
@@ -290,7 +298,7 @@ string alloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 		return reg;
 	}
 	auto var = std::static_pointer_cast<var_node>(temp);
-
+	dbg_printf("temp reg alloc for %s\n", var->eeyore_name.c_str());
 	if (is_global(var->eeyore_name)) // global
 	{
 		if (func_table[""].temps[var->eeyore_name].is_array) // pointer

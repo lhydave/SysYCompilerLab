@@ -13,6 +13,7 @@ using std::queue;
 namespace eeyore_AST {
 
 unordered_map<string, func_entry> func_table; // function table
+vector<string> funcnames; // function names
 
 static unordered_map<int, shared_ptr<stmt_node>>
 	label2stmt; // label to statment
@@ -32,6 +33,7 @@ static bool parseline();
 // register a new function
 static void reg_func(const string &eeyore_name, int param_n)
 {
+	funcnames.push_back(eeyore_name);
 	func_table[eeyore_name] = func_entry(eeyore_name, param_n);
 }
 
@@ -146,8 +148,10 @@ static bool parseline()
 	string line;
 	getline(eeyore_f, line);
 	std::istringstream line_f(line);
-	if (line_f.peek() == EOF)
+	if (eeyore_f.peek() == EOF)
 		return false;
+	if (line.empty())
+		return true;
 	switch (line[0])
 	{
 	// function definition
@@ -190,8 +194,8 @@ static bool parseline()
 	// an inner statement
 	case '\t':
 	{
-		line_f >> line;
-		std::istringstream line_f(line);
+		line_f.get();
+		line = line.substr(1, line.length() - 1);
 		shared_ptr<stmt_node> stmt;
 		switch (line[0])
 		{
@@ -201,7 +205,7 @@ static bool parseline()
 			string temp1;
 			char temp2;
 			int label;
-			line_f >> temp1 >> temp2 >> label;
+			line_f >> temp1 >> temp2 >> temp2 >> label;
 			stmt = make_shared<goto_node>(label);
 			gotos.push_back(stmt);
 			break;
@@ -215,6 +219,8 @@ static bool parseline()
 			line_f.get();
 			if (isdigit(line_f.peek()))
 				line_f >> size >> name;
+			else
+				line_f >> name;
 			reg_var(name, size);
 			break;
 		}
@@ -232,7 +238,9 @@ static bool parseline()
 			// assignment
 			string lval, rval;
 			char eq;
-			line_f >> lval >> eq >> rval;
+			line_f >> lval >> eq;
+			line_f.get();
+			getline(line_f, rval);
 			auto lval_pt = parseop(lval);
 			auto rval_pt = parseop(rval);
 			stmt = make_shared<assign_node>(lval_pt, rval_pt);
@@ -280,7 +288,9 @@ static bool parseline()
 		{
 			string lval, rval;
 			char eq;
-			line_f >> lval >> eq >> rval;
+			line_f >> lval >> eq;
+			line_f.get();
+			getline(line_f, rval);
 			auto lval_pt = parseop(lval);
 			auto rval_pt = parseop(rval);
 			stmt = make_shared<assign_node>(lval_pt, rval_pt);
