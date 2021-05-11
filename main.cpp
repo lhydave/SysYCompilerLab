@@ -13,8 +13,7 @@ namespace sysY_AST {
 node_basic *root; // root of the parse tree
 }
 bool has_err = false; // true if an error occurred
-string tigger_s;
-std::ostringstream tigger_dst(tigger_s);
+std::ostringstream tigger_dst;
 int main(int argc, char **argv)
 {
 	const char *optstring = "Se:o:d";
@@ -55,13 +54,14 @@ int main(int argc, char **argv)
 	{
 		eeyore_AST::build_AST(sysY_AST::root->code);
 		no_alloc::gen_code();
+		fflush(stdout);
 		gen_out = fopen(out_name.c_str(), "w");
 		if (debug)
 		{
 			auto debug_out = fopen("eeyore.out", "w");
 			fprintf(debug_out, "%s", sysY_AST::root->code.c_str());
 		}
-		fprintf(gen_out, "%s", tigger_s.c_str());
+		fprintf(gen_out, "%s", tigger_dst.str().c_str());
 	}
 	return 0;
 }

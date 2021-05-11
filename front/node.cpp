@@ -3,7 +3,7 @@
 #include "node.hpp"
 #include "symtab.hpp"
 #include <numeric>
-#ifdef DEBUG
+#if (DEBUG & 1)
 #define dbg_printf(...)      \
 	do                       \
 	{                        \

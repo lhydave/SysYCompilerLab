@@ -2,7 +2,7 @@
 
 #include "symtab.hpp"
 #include "node.hpp"
-#ifdef DEBUG
+#if (DEBUG & 1)
 #define dbg_printf(...)      \
 	do                       \
 	{                        \

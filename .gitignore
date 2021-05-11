@@ -1,6 +1,7 @@
 .DS_Store
 compiler
 .*
+*.out
 *.dSYM
 SysY.output
 SysY.tab.hpp

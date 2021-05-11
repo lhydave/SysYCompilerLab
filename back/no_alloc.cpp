@@ -54,9 +54,11 @@ void gen_code()
 		else
 			tigger_dst << emit_global_var(global_cnt);
 		global_cnt++;
+		dbg_printf("global var %s init\n", j.eeyore_name.c_str());
 	}
 	func_table.erase("");
-	tigger_dst << "\n";
+	if (!globals.empty())
+		tigger_dst << "\n";
 	// generate functions
 	for (auto i : func_table)
 		gen_func(i.second);
@@ -81,7 +83,9 @@ void gen_func(const func_entry &func)
 	auto stk_size = stack_size(func);
 	now_func = func;
 	var2no.clear();
-	emit_func_begin(func.eeyore_name, func.param_n, stk_size);
+	tigger_dst << emit_func_begin(func.eeyore_name, func.param_n, stk_size);
+	dbg_printf("func %s begin, param: %d, size: %lu\n",
+		func.eeyore_name.c_str(), func.param_n, stk_size);
 	// initialize mappings
 	int posi = 1;
 	auto tempreg = temp_prefix + to_string(0);
@@ -95,41 +99,47 @@ void gen_func(const func_entry &func)
 			posi += i.second.size / int_size;
 		}
 		posi++;
+		dbg_printf("temp var %s mapped\n", i.second.eeyore_name.c_str());
 	}
 	for (auto i = 0; i < func.param_n; i++)
 		var2no[eeyore_param_prefix + to_string(i)] = posi++;
 	for (auto i : func.funcbody)
 		gen_stmt(i);
-	emit_func_end(func.eeyore_name);
+	tigger_dst << emit_func_end(func.eeyore_name);
+	dbg_printf("func %s end\n", func.eeyore_name.c_str());
 }
 
 // generate the tigger code for different statements
 void gen_stmt(const shared_ptr<stmt_node> &stmt)
 {
 	if (stmt->label != -1)
-		emit_label(stmt->label);
+		tigger_dst << emit_label(stmt->label);
 	switch (stmt->stmt_type)
 	{
 	case STMT_ASSIGN:
 	{
+		dbg_printf("assign stmt gen\n");
 		auto stmt_new = std::static_pointer_cast<assign_node>(stmt);
 		gen_assign(stmt_new->lval, stmt_new->rval);
 		break;
 	}
 	case STMT_GOTO:
 	{
+		dbg_printf("goto stmt gen\n");
 		auto stmt_new = std::static_pointer_cast<goto_node>(stmt);
 		gen_goto(stmt_new);
 		break;
 	}
 	case STMT_RET:
 	{
+		dbg_printf("ret stmt gen\n");
 		auto stmt_new = std::static_pointer_cast<ret_node>(stmt);
 		gen_ret(stmt_new);
 		break;
 	}
 	case STMT_CALL:
 	{
+		dbg_printf("call stmt gen\n");
 		auto stmt_new = std::static_pointer_cast<call_node>(stmt);
 		gen_call(stmt_new);
 		break;
@@ -157,6 +167,11 @@ void gen_goto(const shared_ptr<goto_node> &stmt)
 // generate tigger code for return
 void gen_ret(const shared_ptr<ret_node> &stmt)
 {
+	if (stmt->ret_val)
+	{
+		auto reg = alloc_temp_reg(stmt->ret_val, 0);
+		tigger_dst << emit_exp_assign(ret_reg, reg);
+	}
 	tigger_dst << emit_return();
 }
 
@@ -267,10 +282,15 @@ void gen_binary(const shared_ptr<op_node> &temp, int tempid1, int tempid2)
 // allocate temp register for variable or number
 string alloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 {
-	if (temp->exp_type == EXP_NUM)
-		return temp_prefix + to_string(tempid);
-	auto var = std::static_pointer_cast<var_node>(temp);
 	auto reg = temp_prefix + to_string(tempid);
+	if (temp->exp_type == EXP_NUM)
+	{
+		tigger_dst << emit_exp_assign(
+			reg, to_string(std::static_pointer_cast<num_node>(temp)->val));
+		return reg;
+	}
+	auto var = std::static_pointer_cast<var_node>(temp);
+
 	if (is_global(var->eeyore_name)) // global
 	{
 		if (func_table[""].temps[var->eeyore_name].is_array) // pointer

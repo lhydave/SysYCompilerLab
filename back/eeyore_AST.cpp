@@ -253,7 +253,10 @@ static bool parseline()
 			break;
 		}
 		// function call
-		case 'c': stmt = parseop(line); break;
+		case 'c':
+			stmt = parseop(line);
+			stmt->stmt_type = STMT_CALL;
+			break;
 		// conditional jump
 		case 'i':
 		{
@@ -285,12 +288,15 @@ static bool parseline()
 		}
 		default: break;
 		} // switch
-		if (stmt) // assign the labels and push the statement
+		if (stmt) // push the statement
 		{
 			func_table[now_func].funcbody.push_back(stmt);
-			stmt->label = *std::min_element(
-				labels.begin(), labels.end(), std::greater<int>());
-			labels.clear();
+			if (!labels.empty()) // assign the labels
+			{
+				stmt->label = *std::min_element(
+					labels.begin(), labels.end(), std::greater<int>());
+				labels.clear();
+			}
 		}
 	} // case '\t'
 	default: break;
@@ -325,5 +331,6 @@ void build_AST(const string &eeyore_code)
 	// parseline!
 	while (parseline())
 		;
+	dbg_printf("\n");
 }
 } // namespace eeyore_AST

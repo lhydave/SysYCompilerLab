@@ -11,6 +11,20 @@ using std::shared_ptr;
 using std::string;
 using std::unordered_map;
 using std::vector;
+
+#if (DEBUG & 2)
+#define dbg_printf(...)      \
+	do                       \
+	{                        \
+		printf(__VA_ARGS__); \
+		fflush(stdout);      \
+	} while (0)
+#else
+#undef assert
+#define assert(...)
+#define dbg_printf(...)
+#endif
+
 namespace eeyore_AST {
 
 // right value of an assignment
@@ -32,6 +46,7 @@ struct stmt_node;
 struct assign_node;
 struct goto_node;
 struct ret_node;
+
 struct op_node;
 struct call_node;
 struct var_node;
@@ -54,6 +69,7 @@ struct var_entry {
 		eeyore_name(_eeyore_name),
 		size(_size), is_array(_is_array)
 	{
+		dbg_printf("var_entry %s created\n", _eeyore_name.c_str());
 	}
 };
 
@@ -67,6 +83,7 @@ struct func_entry {
 	func_entry(const string &_eeyore_name, int _param_n) :
 		eeyore_name(_eeyore_name), param_n(_param_n)
 	{
+		dbg_printf("func_entry %s created\n", _eeyore_name.c_str());
 	}
 };
 
@@ -84,6 +101,8 @@ struct assign_node : public stmt_node {
 		lval(_lval),
 		rval(_rval)
 	{
+		stmt_type = STMT_ASSIGN;
+		dbg_printf("assign_node created\n");
 	}
 };
 
@@ -97,6 +116,8 @@ struct goto_node : public stmt_node {
 		cond(_cond)
 
 	{
+		stmt_type = STMT_GOTO;
+		dbg_printf("goto_node created, label: %d\n", goto_label);
 	}
 };
 
@@ -106,10 +127,12 @@ struct ret_node : public stmt_node {
 	ret_node(const shared_ptr<op_node> &_ret_val = shared_ptr<op_node>()) :
 		ret_val(_ret_val)
 	{
+		stmt_type = STMT_RET;
+		dbg_printf("ret_node created\n");
 	}
 };
 
-struct op_node : public stmt_node {
+struct op_node: public stmt_node{
 	exp_t exp_type; // expression type
 	string op; // operator
 	shared_ptr<op_node> left; // left expression
@@ -121,6 +144,8 @@ struct op_node : public stmt_node {
 		exp_type(_exp_type),
 		op(_op), left(_left), right(_right)
 	{
+		if (exp_type == EXP_OP)
+			dbg_printf("op_node created\n");
 	}
 };
 
@@ -131,6 +156,7 @@ struct call_node : public op_node {
 	call_node(const string &_func_name) :
 		op_node(EXP_CALL), func_name(_func_name)
 	{
+		dbg_printf("call_node created\n");
 	}
 };
 
@@ -140,6 +166,7 @@ struct var_node : public op_node {
 	var_node(const string &_eeyore_name) :
 		op_node(EXP_VAR), eeyore_name(_eeyore_name)
 	{
+		dbg_printf("var_node created, name: %s\n", eeyore_name.c_str());
 	}
 };
 
@@ -148,6 +175,7 @@ struct num_node : public op_node {
 
 	num_node(int _val) : op_node(EXP_NUM), val(_val)
 	{
+		dbg_printf("num_node created, num:%d\n", val);
 	}
 };
 } // namespace eeyore_AST
