@@ -3,6 +3,9 @@
 #include "node.hpp"
 #include "symtab.hpp"
 #include <numeric>
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 #if (DEBUG & 1)
 #define dbg_printf(...)      \
 	do                       \

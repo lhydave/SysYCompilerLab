@@ -12,6 +12,10 @@ using std::string;
 using std::unordered_map;
 using std::vector;
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 #if (DEBUG & 2)
 #define dbg_printf(...)      \
 	do                       \
@@ -133,7 +137,7 @@ struct ret_node : public stmt_node {
 	}
 };
 
-struct op_node: public stmt_node{
+struct op_node : public stmt_node {
 	exp_t exp_type; // expression type
 	string op; // operator
 	shared_ptr<op_node> left; // left expression

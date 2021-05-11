@@ -2,6 +2,9 @@
 %{
 #include "node.hpp"
 #include "symtab.hpp"
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 #if (DEBUG & 1)
 #define dbg_printf(...) do { printf(__VA_ARGS__); fflush(stdout);} while(0)
 #else
