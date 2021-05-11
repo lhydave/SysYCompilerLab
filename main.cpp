@@ -76,7 +76,6 @@ int main(int argc, char **argv)
 	// generate tigger
 	eeyore_AST::build_AST(sysY_AST::root->code);
 	no_alloc::gen_code();
-	throw 0;
 	if (t)
 	{
 		auto out_f = fopen(output_s.c_str(), "w");
