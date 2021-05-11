@@ -93,11 +93,12 @@ void gen_func(const func_entry &func)
 	for (auto i : func.temps)
 	{
 		var2no[i.second.eeyore_name] = posi;
-		if (i.second.is_array)
-			posi += i.second.size / int_size;
 		dbg_printf(
 			"temp var %s mapped to %d\n", i.second.eeyore_name.c_str(), posi);
-		posi++;
+		if (i.second.is_array)
+			posi += i.second.size / int_size;
+		else
+			posi++;
 	}
 	for (auto i = 0; i < func.param_n; i++)
 	{
