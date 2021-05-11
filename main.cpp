@@ -1,8 +1,8 @@
-#include "SysY.tab.hpp"
 #include "eeyore_AST.hpp"
 #include "node.hpp"
 #include "symtab.hpp"
 #include "tigger_gen.hpp"
+#include "SysY.tab.hpp"
 #include <cstdio>
 #include <sstream>
 #include <unistd.h>
