@@ -97,8 +97,9 @@ void gen_func(const func_entry &func)
 			tigger_dst << emit_store(tempreg, posi);
 			posi += i.second.size / int_size;
 		}
+		dbg_printf(
+			"temp var %s mapped to %d\n", i.second.eeyore_name.c_str(), posi);
 		posi++;
-		dbg_printf("temp var %s mapped\n", i.second.eeyore_name.c_str());
 	}
 	for (auto i = 0; i < func.param_n; i++)
 	{
@@ -158,7 +159,7 @@ void gen_goto(const shared_ptr<goto_node> &stmt)
 		gen_assign(temp_prefix + to_string(0), stmt->cond->left);
 		if (std::static_pointer_cast<num_node>(stmt->cond->right)->val)
 			tigger_dst << emit_goto(
-				stmt->label, temp_prefix + to_string(0) + " != " + zero_reg);
+				stmt->goto_label, temp_prefix + to_string(0) + " != " + zero_reg);
 		else
 			tigger_dst << emit_goto(
 				stmt->goto_label, temp_prefix + to_string(0) + " == " + zero_reg);
