@@ -34,7 +34,7 @@ string emit_exp_assign(const string &lval, const string &rval)
 // emit goto statement
 string emit_goto(int label, const string &cond)
 {
-	if (!cond.empty()) // unconditional jump
+	if (cond.empty()) // unconditional jump
 		return "\tgoto l" + to_string(label) + "\n";
 	// conditional jump
 	return "\tif " + cond + " goto l" + to_string(label) + "\n";

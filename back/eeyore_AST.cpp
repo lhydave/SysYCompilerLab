@@ -17,7 +17,7 @@ vector<string> funcnames; // function names
 
 static unordered_map<int, shared_ptr<stmt_node>>
 	label2stmt; // label to statment
-static vector<shared_ptr<stmt_node>> gotos; // goto statements
+static vector<shared_ptr<goto_node>> gotos; // goto statements
 static vector<int> labels; // unregistered labels
 static queue<shared_ptr<op_node>> params; // unregistered parameters
 static string now_func; // now function name
@@ -51,7 +51,7 @@ static void reg_var(const string &eeyore_name, int size)
 void simple_label()
 {
 	for (auto i : gotos)
-		i->label = label2stmt[i->label]->label;
+		i->goto_label = label2stmt[i->goto_label]->label;
 	gotos.clear();
 	label2stmt.clear();
 }
@@ -135,6 +135,7 @@ static shared_ptr<op_node> parseop(const string &line)
 			line_f >> op >> right;
 			ret = make_shared<op_node>(
 				EXP_OP, op, parse_var_num(left), parse_var_num(right));
+			printf("left: %s, right: %s\n", left.c_str(), right.c_str());
 		}
 		break;
 	}
@@ -188,6 +189,7 @@ static bool parseline()
 		int label;
 		char ch;
 		line_f >> ch >> label;
+		dbg_printf("label %d\n", label);
 		labels.push_back(label);
 		break;
 	}
@@ -205,9 +207,10 @@ static bool parseline()
 			string temp1;
 			char temp2;
 			int label;
-			line_f >> temp1 >> temp2 >> temp2 >> label;
+			line_f >> temp1 >> temp2 >> label;
 			stmt = make_shared<goto_node>(label);
-			gotos.push_back(stmt);
+			dbg_printf("goto: %d\n", label);
+			gotos.push_back(std::static_pointer_cast<goto_node>(stmt));
 			break;
 		}
 		// variable
@@ -276,10 +279,12 @@ static bool parseline()
 			cond += " " + temp;
 			line_f >> temp;
 			cond += " " + temp;
+			dbg_printf("cond on %s ", cond.c_str());
 			line_f >> temp >> tempc >> label;
 			auto cond_pt = parseop(cond);
+			dbg_printf("if goto: %d\n", label);
 			stmt = make_shared<goto_node>(label, cond_pt);
-			gotos.push_back(stmt);
+			gotos.push_back(std::static_pointer_cast<goto_node>(stmt));
 			break;
 		}
 		// assignment
@@ -305,6 +310,9 @@ static bool parseline()
 			{
 				stmt->label = *std::min_element(
 					labels.begin(), labels.end(), std::greater<int>());
+				dbg_printf("now stmt label: %d\n", stmt->label);
+				for (auto i : labels)
+					label2stmt[i] = stmt;
 				labels.clear();
 			}
 		}

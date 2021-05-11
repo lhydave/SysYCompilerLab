@@ -71,6 +71,7 @@ int main(int argc, char **argv)
 	{
 		auto out_f = fopen("eeyore.out", "w");
 		fprintf(out_f, "%s", sysY_AST::root->code.c_str());
+		fflush(out_f);
 	}
 	// generate tigger
 	eeyore_AST::build_AST(sysY_AST::root->code);

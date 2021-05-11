@@ -153,7 +153,7 @@ void gen_stmt(const shared_ptr<stmt_node> &stmt)
 // generate tigger code for goto statement
 void gen_goto(const shared_ptr<goto_node> &stmt)
 {
-	if (stmt->label != -1) // conditional jump
+	if (stmt->cond) // conditional jump
 	{
 		gen_assign(temp_prefix + to_string(0), stmt->cond->left);
 		if (std::static_pointer_cast<num_node>(stmt->cond->right)->val)
@@ -161,10 +161,10 @@ void gen_goto(const shared_ptr<goto_node> &stmt)
 				stmt->label, temp_prefix + to_string(0) + " != " + zero_reg);
 		else
 			tigger_dst << emit_goto(
-				stmt->label, temp_prefix + to_string(0) + " == " + zero_reg);
+				stmt->goto_label, temp_prefix + to_string(0) + " == " + zero_reg);
 	}
 	else // unconditional jump
-		tigger_dst << emit_goto(stmt->label);
+		tigger_dst << emit_goto(stmt->goto_label);
 }
 
 // generate tigger code for return
@@ -212,8 +212,6 @@ void gen_assign(
 	}
 	auto var = std::static_pointer_cast<var_node>(lval);
 	string left = temp_prefix + to_string(0);
-	if (!is_global(var->eeyore_name))
-		left = alloc_temp_reg(lval, 0);
 	gen_assign(left, rval);
 	dealloc_temp_reg(lval, 0);
 }
