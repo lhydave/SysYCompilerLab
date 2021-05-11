@@ -323,9 +323,12 @@ void dealloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 	auto var = std::static_pointer_cast<var_node>(temp);
 	auto reg = temp_prefix + to_string(tempid);
 	if (is_global(var->eeyore_name)) // global
-		tigger_dst << emit_exp_assign(
-			global_prefix + to_string(global_var2no[var->eeyore_name]) + "[0]",
-			reg);
+	{
+		tigger_dst << emit_loadaddr(
+			global_prefix + to_string(global_var2no[var->eeyore_name]),
+			temp_prefix + to_string(6));
+		tigger_dst << emit_exp_assign(temp_prefix + to_string(6) + "[0]", reg);
+	}
 	else // local
 		tigger_dst << emit_store(reg, var2no[var->eeyore_name]);
 }
