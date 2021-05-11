@@ -86,7 +86,7 @@ void gen_func(const func_entry &func)
 	dbg_printf("func %s begin, param: %d, size: %lu\n",
 		func.eeyore_name.c_str(), func.param_n, stk_size);
 	// initialize mappings
-	int posi = 1;
+	int posi = 0;
 	auto tempreg = temp_prefix + to_string(0);
 	for (auto i : func.temps)
 	{
