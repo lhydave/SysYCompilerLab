@@ -1,0 +1,14 @@
+int f(int a, int b)
+{
+    return a+b;
+}
+
+int g(int a)
+{
+    return a;
+}
+
+int main()
+{
+    return f(0,g(1));
+}

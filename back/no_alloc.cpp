@@ -263,9 +263,10 @@ void gen_array(const shared_ptr<op_node> &temp, int tempid1, int tempid2)
 	if (is_global(base->eeyore_name)) // global
 		tigger_dst << emit_loadaddr(
 			global_prefix + to_string(global_var2no[base->eeyore_name]), temp1);
-	else if (now_func.temps[base->eeyore_name].is_array) // array
+	else if (!is_param(base->eeyore_name) &&
+		now_func.temps[base->eeyore_name].is_array) // array
 		tigger_dst << emit_loadaddr(var2no[base->eeyore_name], temp1);
-	else // variable
+	else // variable or param
 		tigger_dst << emit_load(var2no[base->eeyore_name], temp1);
 	auto shift = alloc_temp_reg(temp->right, tempid2);
 	tigger_dst << emit_exp_assign(temp1, temp1 + " + " + temp2);
@@ -323,7 +324,7 @@ void dealloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 		return;
 	auto var = std::static_pointer_cast<var_node>(temp);
 	auto reg = temp_prefix + to_string(tempid);
-	if (is_global(var->eeyore_name)) // global
+	if (!is_param(var->eeyore_name) && is_global(var->eeyore_name)) // global
 	{
 		tigger_dst << emit_loadaddr(
 			global_prefix + to_string(global_var2no[var->eeyore_name]),
