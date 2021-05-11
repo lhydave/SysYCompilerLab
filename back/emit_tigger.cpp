@@ -25,26 +25,19 @@ string emit_func_end(const string &func)
 }
 
 // emit assignment
-string emit_exp_assign(const string &lval, const string &left, const string &op,
-	const string &right)
+string emit_exp_assign(const string &lval, const string &rval)
 {
-	if (op == "!" || op == "-") // unary
-		return "\t" + lval + " = " + op + left + "\n";
-	else if (op.empty()) // no operation
-		return "\t" + lval + " = " + left + "\n";
-	else // binary
-		return "\t" + lval + " = " + left + " " + op + " " + right + "\n";
+
+	return "\t" + lval + " = " + rval + "\n";
 }
 
 // emit goto statement
-string emit_goto(
-	int label, const string &op, const string &left, const string &right)
+string emit_goto(int label, const string &cond)
 {
-	if (op.empty()) // unconditional jump
+	if (!cond.empty()) // unconditional jump
 		return "\tgoto l" + to_string(label) + "\n";
 	// conditional jump
-	return "\tif " + left + " " + op + " " + right + " goto l" +
-		to_string(label) + "\n";
+	return "\tif " + cond + " goto l" + to_string(label) + "\n";
 }
 
 // emit label

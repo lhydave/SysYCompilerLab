@@ -4,7 +4,7 @@ CC 			:= g++
 CDEBUG		:= -g -D DEBUG
 CFLAGS 		:= -lm -O2 -Wall -std=c++11 #$(CDEBUG)
 INCLUDEDIR 	:= -Ifront -Iback
-INCLUDE 	:= front/node.cpp front/symtab.cpp main.cpp back/eeyore_AST.cpp
+INCLUDE 	:= front/node.cpp front/symtab.cpp main.cpp back/eeyore_AST.cpp back/emit_tigger.cpp back/no_alloc.cpp
 YACCDEBUG	:= #-v --report=all
 
 all: compiler

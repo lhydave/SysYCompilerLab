@@ -304,6 +304,12 @@ bool is_global(const string &name)
 	return func_table[""].temps.count(name) != 0;
 }
 
+// judge whether the variable is a parameter
+bool is_param(const string &name)
+{
+	return name[0] == 'p';
+}
+
 // build the AST for eeyore
 void build_AST(const string &eeyore_code)
 {

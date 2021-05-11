@@ -40,6 +40,7 @@ struct num_node;
 extern unordered_map<string, func_entry> func_table;
 
 bool is_global(const string &name);
+bool is_param(const string &name);
 void build_AST(const string &eeyore_code);
 
 struct var_entry {
