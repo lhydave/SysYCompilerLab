@@ -60,7 +60,7 @@ void simple_label()
 static shared_ptr<op_node> parse_var_num(const string &s)
 {
 	std::istringstream s_f(s);
-	if (isdigit(s[0]))
+	if (!isalpha(s[0]))
 	{
 		int val;
 		s_f >> val;
