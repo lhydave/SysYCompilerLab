@@ -1,8 +1,8 @@
+#include "SysY.tab.hpp"
 #include "eeyore_AST.hpp"
 #include "node.hpp"
 #include "symtab.hpp"
 #include "tigger_gen.hpp"
-#include "SysY.tab.hpp"
 #include <cstdio>
 #include <sstream>
 #include <unistd.h>
@@ -16,53 +16,70 @@ bool has_err = false; // true if an error occurred
 std::ostringstream tigger_dst;
 int main(int argc, char **argv)
 {
-	const char *optstring = "Se:o:d";
-	char c;
-	bool gen_asm = false;
-	yyin = nullptr;
-	string eeyoreout_s, tiggerout_s;
-	while ((c = getopt(argc, argv, optstring)) != EOF)
+	const char *optstring = "Sve:t:o:";
+	bool S = false, e = false, t = false, v = false;
+	string output_s;
+	char ch;
+	while ((ch = getopt(argc, argv, optstring)) != -1)
 	{
-		switch (c)
+		switch (ch)
 		{
-		case 'S': gen_asm = true; break;
-		case 'e': yyin = fopen(optarg, "r"); break;
-		case 'o': eeyoreout_s = optarg; break;
-		case 't': tiggerout_s = optarg; break;
-		default: printf("Not support yet!\n"); return 0;
+		case 'S': S = true; break;
+		case 'e':
+			e = true;
+			yyin = fopen(optarg, "r");
+			break;
+		case 't':
+			t = true;
+			yyin = fopen(optarg, "r");
+			break;
+		case 'v': v = true; break;
+		case 'o': output_s = optarg; break;
+		default: printf("Unknown parameter\n"); return 0;
 		}
 	}
-	if (!gen_asm)
+	if (!S)
 	{
-		printf("Not support yet!\n");
+		printf("not support yet!\n");
 		return 0;
 	}
-	if ((eeyoreout_s.empty() && tiggerout_s.empty()) || yyin == nullptr)
+	if ((e && t) || !(e || t))
 	{
-		fprintf(stderr, "No file opened.\n");
-		return 1;
+		printf("only one parameter can be dedicated.\n");
+		return 0;
 	}
-	// initialize symbol tables
+	if (!yyin)
+	{
+		printf("no valid input file!\n");
+		return 0;
+	}
 	sysY_AST::init_tables();
 	do
 	{
 		yyparse();
 	} while (!feof(yyin));
 	sysY_AST::check_main();
-	if (!has_err) // good!
+	if (has_err)
+		return 1;
+	if (e) // generate eeyore
 	{
-		if (!eeyoreout_s.empty())
-		{
-			auto out = fopen(eeyoreout_s.c_str(), "w");
-			fprintf(out, "%s", sysY_AST::root->code.c_str());
-		}
-		eeyore_AST::build_AST(sysY_AST::root->code);
-		no_alloc::gen_code();
-		if (!tiggerout_s.empty())
-		{
-			auto out = fopen(tiggerout_s.c_str(), "w");
-			fprintf(out, "%s", tigger_dst.str().c_str());
-		}
+		auto out_f = fopen(output_s.c_str(), "w");
+		fprintf(out_f, "%s", sysY_AST::root->code.c_str());
+		return 0;
+	}
+	else if (v) // debug
+	{
+		auto out_f = fopen("eeyore.out", "w");
+		fprintf(out_f, "%s", sysY_AST::root->code.c_str());
+	}
+	// generate tigger
+	eeyore_AST::build_AST(sysY_AST::root->code);
+	no_alloc::gen_code();
+	if (t)
+	{
+		auto out_f = fopen(output_s.c_str(), "w");
+		fprintf(out_f, "%s", tigger_dst.str().c_str());
+		return 0;
 	}
 	return 0;
 }
