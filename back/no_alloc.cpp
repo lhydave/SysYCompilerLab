@@ -69,9 +69,11 @@ size_t stack_size(const func_entry &func)
 	size_t size = func.param_n;
 	for (auto i : func.temps)
 	{
-		size++;
+
 		if (i.second.is_array)
 			size += i.second.size / int_size;
+		else
+			size++;
 	}
 	return size;
 }
@@ -92,11 +94,7 @@ void gen_func(const func_entry &func)
 	{
 		var2no[i.second.eeyore_name] = posi;
 		if (i.second.is_array)
-		{
-			tigger_dst << emit_loadaddr(posi + 1, tempreg);
-			tigger_dst << emit_store(tempreg, posi);
 			posi += i.second.size / int_size;
-		}
 		dbg_printf(
 			"temp var %s mapped to %d\n", i.second.eeyore_name.c_str(), posi);
 		posi++;
@@ -158,11 +156,11 @@ void gen_goto(const shared_ptr<goto_node> &stmt)
 	{
 		gen_assign(temp_prefix + to_string(0), stmt->cond->left);
 		if (std::static_pointer_cast<num_node>(stmt->cond->right)->val)
-			tigger_dst << emit_goto(
-				stmt->goto_label, temp_prefix + to_string(0) + " != " + zero_reg);
+			tigger_dst << emit_goto(stmt->goto_label,
+				temp_prefix + to_string(0) + " != " + zero_reg);
 		else
-			tigger_dst << emit_goto(
-				stmt->goto_label, temp_prefix + to_string(0) + " == " + zero_reg);
+			tigger_dst << emit_goto(stmt->goto_label,
+				temp_prefix + to_string(0) + " == " + zero_reg);
 	}
 	else // unconditional jump
 		tigger_dst << emit_goto(stmt->goto_label);
@@ -262,10 +260,12 @@ void gen_array(const shared_ptr<op_node> &temp, int tempid1, int tempid2)
 	auto base = std::static_pointer_cast<var_node>(temp->left);
 	auto temp1 = temp_prefix + to_string(tempid1);
 	auto temp2 = temp_prefix + to_string(tempid2);
-	if (is_global(base->eeyore_name))
+	if (is_global(base->eeyore_name)) // global
 		tigger_dst << emit_loadaddr(
 			global_prefix + to_string(global_var2no[base->eeyore_name]), temp1);
-	else
+	else if (now_func.temps[base->eeyore_name].is_array) // array
+		tigger_dst << emit_loadaddr(var2no[base->eeyore_name], temp1);
+	else // variable
 		tigger_dst << emit_load(var2no[base->eeyore_name], temp1);
 	auto shift = alloc_temp_reg(temp->right, tempid2);
 	tigger_dst << emit_exp_assign(temp1, temp1 + " + " + temp2);
@@ -309,7 +309,9 @@ string alloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 				global_prefix + to_string(global_var2no[var->eeyore_name]),
 				reg);
 	}
-	else // local
+	else if (now_func.temps[var->eeyore_name].is_array) // array
+		tigger_dst << emit_loadaddr(var2no[var->eeyore_name], reg);
+	else // variable
 		tigger_dst << emit_load(var2no[var->eeyore_name], reg);
 	return reg;
 }
