@@ -235,7 +235,7 @@ static bool parseline()
 			{
 				string temp, param;
 				line_f >> temp >> param;
-				params.push(parseop(param));
+				params.push(parse_var_num(param));
 				break;
 			}
 			// assignment
@@ -259,7 +259,7 @@ static bool parseline()
 			else
 			{
 				line_f >> ret_val;
-				stmt = make_shared<ret_node>(parseop(ret_val));
+				stmt = make_shared<ret_node>(parse_var_num(ret_val));
 			}
 			break;
 		}

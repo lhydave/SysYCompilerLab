@@ -89,7 +89,6 @@ void gen_func(const func_entry &func)
 		func.eeyore_name.c_str(), func.param_n, stk_size);
 	// initialize mappings
 	int posi = 0;
-	auto tempreg = temp_prefix + to_string(0);
 	for (auto i : func.temps)
 	{
 		var2no[i.second.eeyore_name] = posi;
@@ -181,10 +180,6 @@ void gen_ret(const shared_ptr<ret_node> &stmt)
 // generate tigger code for function call
 void gen_call(const shared_ptr<call_node> &stmt, const string &ret_store)
 {
-	// store all parameters
-	for (auto i = 0; i < now_func.param_n; i++)
-		tigger_dst << emit_store(param_prefix + to_string(i),
-			var2no[eeyore_param_prefix + to_string(i)]);
 	// set parameters
 	for (auto i = 0; i < stmt->params.size(); i++)
 		gen_assign(param_prefix + to_string(i), stmt->params[i]);
@@ -192,10 +187,6 @@ void gen_call(const shared_ptr<call_node> &stmt, const string &ret_store)
 	tigger_dst << emit_call(stmt->func_name);
 	if (!ret_store.empty()) // assign
 		tigger_dst << emit_exp_assign(ret_store, ret_reg);
-	// recover all parameters
-	for (auto i = 0; i < now_func.param_n; i++)
-		tigger_dst << emit_load(var2no[eeyore_param_prefix + to_string(i)],
-			param_prefix + to_string(i));
 }
 
 // generate tigger code of assign
@@ -311,9 +302,10 @@ string alloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 				global_prefix + to_string(global_var2no[var->eeyore_name]),
 				reg);
 	}
-	else if (now_func.temps[var->eeyore_name].is_array) // array
+	else if (!is_param(var->eeyore_name) &&
+		now_func.temps[var->eeyore_name].is_array) // array
 		tigger_dst << emit_loadaddr(var2no[var->eeyore_name], reg);
-	else // variable
+	else // variable or param
 		tigger_dst << emit_load(var2no[var->eeyore_name], reg);
 	return reg;
 }
@@ -325,7 +317,7 @@ void dealloc_temp_reg(const shared_ptr<op_node> &temp, int tempid)
 		return;
 	auto var = std::static_pointer_cast<var_node>(temp);
 	auto reg = temp_prefix + to_string(tempid);
-	if (!is_param(var->eeyore_name) && is_global(var->eeyore_name)) // global
+	if (is_global(var->eeyore_name)) // global
 	{
 		tigger_dst << emit_loadaddr(
 			global_prefix + to_string(global_var2no[var->eeyore_name]),
