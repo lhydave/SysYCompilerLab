@@ -154,13 +154,13 @@ void gen_goto(const shared_ptr<goto_node> &stmt)
 {
 	if (stmt->cond) // conditional jump
 	{
-		gen_assign(temp_prefix + to_string(0), stmt->cond->left);
+		gen_assign(temp_prefix + to_string(1), stmt->cond->left);
 		if (std::static_pointer_cast<num_node>(stmt->cond->right)->val)
 			tigger_dst << emit_goto(stmt->goto_label,
-				temp_prefix + to_string(0) + " != " + zero_reg);
+				temp_prefix + to_string(1) + " != " + zero_reg);
 		else
 			tigger_dst << emit_goto(stmt->goto_label,
-				temp_prefix + to_string(0) + " == " + zero_reg);
+				temp_prefix + to_string(1) + " == " + zero_reg);
 	}
 	else // unconditional jump
 		tigger_dst << emit_goto(stmt->goto_label);
@@ -171,7 +171,7 @@ void gen_ret(const shared_ptr<ret_node> &stmt)
 {
 	if (stmt->ret_val)
 	{
-		auto reg = alloc_temp_reg(stmt->ret_val, 0);
+		auto reg = alloc_temp_reg(stmt->ret_val, 1);
 		tigger_dst << emit_exp_assign(ret_reg, reg);
 	}
 	tigger_dst << emit_return();
@@ -195,16 +195,16 @@ void gen_assign(
 {
 	if (lval->exp_type == EXP_ARRAY) // store
 	{
-		gen_array(lval, 0, 1);
-		string left = temp_prefix + to_string(0) + "[0]";
-		auto right = alloc_temp_reg(rval, 1);
+		gen_array(lval, 1, 2);
+		string left = temp_prefix + to_string(1) + "[0]";
+		auto right = alloc_temp_reg(rval, 2);
 		tigger_dst << emit_exp_assign(left, right);
 		return;
 	}
 	auto var = std::static_pointer_cast<var_node>(lval);
-	string left = temp_prefix + to_string(0);
+	string left = temp_prefix + to_string(1);
 	gen_assign(left, rval);
-	dealloc_temp_reg(lval, 0);
+	dealloc_temp_reg(lval, 1);
 }
 
 // generate the tigger code for assign
@@ -218,14 +218,14 @@ void gen_assign(const string &lval, const shared_ptr<op_node> &rval)
 	}
 	if (rval->exp_type == EXP_VAR) // variable!
 	{
-		auto rreg = alloc_temp_reg(rval, 1);
+		auto rreg = alloc_temp_reg(rval, 2);
 		tigger_dst << emit_exp_assign(lval, rreg);
 		return;
 	}
 	if (rval->exp_type == EXP_ARRAY) // array!
 	{
-		gen_array(rval, 1, 2);
-		string right = temp_prefix + to_string(1) + "[0]";
+		gen_array(rval, 2, 3);
+		string right = temp_prefix + to_string(2) + "[0]";
 		tigger_dst << emit_exp_assign(lval, right);
 		return;
 	}
@@ -236,13 +236,13 @@ void gen_assign(const string &lval, const shared_ptr<op_node> &rval)
 	}
 	if (!rval->right) // unary operator
 	{
-		gen_unary(rval, 1);
-		tigger_dst << emit_exp_assign(lval, temp_prefix + to_string(1));
+		gen_unary(rval, 2);
+		tigger_dst << emit_exp_assign(lval, temp_prefix + to_string(2));
 		return;
 	}
 	// binary operator
-	gen_binary(rval, 1, 2);
-	tigger_dst << emit_exp_assign(lval, temp_prefix + to_string(1));
+	gen_binary(rval, 2, 3);
+	tigger_dst << emit_exp_assign(lval, temp_prefix + to_string(2));
 }
 
 // generate tigger code for array

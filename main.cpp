@@ -1,5 +1,6 @@
 #include "eeyore_AST.hpp"
 #include "node.hpp"
+#include "riscv/emit_riscv.hpp"
 #include "symtab.hpp"
 #include "tigger_gen.hpp"
 #include "SysY.tab.hpp"
@@ -14,6 +15,7 @@ node_basic *root; // root of the parse tree
 }
 bool has_err = false; // true if an error occurred
 std::ostringstream tigger_dst;
+std::ostringstream riscv_dst;
 int main(int argc, char **argv)
 {
 	const char *optstring = "Sve:t:o:";
@@ -43,9 +45,9 @@ int main(int argc, char **argv)
 		printf("not support yet!\n");
 		return 0;
 	}
-	if ((e && t) || !(e || t))
+	if (e && t)
 	{
-		printf("only one parameter can be dedicated.\n");
+		printf("at most one parameter can be dedicated.\n");
 		return 0;
 	}
 	if (!yyin)
@@ -80,6 +82,20 @@ int main(int argc, char **argv)
 	{
 		auto out_f = fopen(output_s.c_str(), "w");
 		fprintf(out_f, "%s", tigger_dst.str().c_str());
+		return 0;
+	}
+	else if (v)
+	{
+		auto out_f = fopen("tigger.out", "w");
+		fprintf(out_f, "%s", tigger_dst.str().c_str());
+		return 0;
+	}
+	// generate risc-v code
+	riscv::gen_code();
+	if (!e || !t)
+	{
+		auto out_f = fopen(output_s.c_str(), "w");
+		fprintf(out_f, "%s", riscv_dst.str().c_str());
 		return 0;
 	}
 	return 0;
