@@ -4,6 +4,8 @@
 using std::to_string;
 namespace tigger {
 
+vector<shared_ptr<stmt>> seq;
+
 // emit global variable
 string emit_global_var(int No, int num, int size, bool is_array)
 {

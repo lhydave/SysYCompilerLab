@@ -95,11 +95,11 @@ void gen_code()
 void emit_func_begin(const shared_ptr<tigger::func_begin> &stmt)
 {
 	// code format
-	auto f = [](const string &name, size_t STK) {
-		return "\t.text\n\t.align\t2\t.global\t" + name + "\n\t.type\t" + name +
-			", @function\n" + name + ":\n" + "\tli\tt0, " + to_string(-STK) +
-			"\nadd\tsp, sp, t0\n\tli\tt0" + to_string(STK - 4) +
-			"\n\tsw\tra, t0(sp)\n";
+	auto f = [](const string &name, int STK) {
+		return "\t.text\n\t.align\t2\n\t.global\t" + name + "\n\t.type\t" +
+			name + ", @function\n" + name + ":\n" + "\tli\tt0, " +
+			to_string(-STK) + "\n\tadd\tsp, sp, t0\n\tli\tt0, " +
+			to_string(STK - 4) + "\n\tadd\tt0, t0, sp\n\tsw\tra, 0(t0)\n";
 	};
 	now_stk = (stmt->stack_n / 4 + 1) * 16;
 	// output the code
@@ -108,7 +108,7 @@ void emit_func_begin(const shared_ptr<tigger::func_begin> &stmt)
 
 void emit_func_end(const shared_ptr<tigger::func_end> &stmt)
 {
-	auto name = stmt->name;
+	auto name = stmt->name.substr(2, stmt->name.length() - 2);
 	riscv_dst << "\t.size\t" << name << ", .-" << name << "\n\n";
 	now_stk = 0;
 }
@@ -144,7 +144,7 @@ void emit_assign(const shared_ptr<tigger::assign_stmt> &stmt)
 		ret.second = atoi(s.substr(l + 1, r - l - 1).c_str());
 		return ret;
 	};
-	if (lval.find('[')) // array store
+	if (lval.find('[') != string::npos) // array store
 	{
 		auto temp = parsearray(lval);
 		if (in_int12(temp.second))
@@ -153,11 +153,12 @@ void emit_assign(const shared_ptr<tigger::assign_stmt> &stmt)
 		else
 		{
 			riscv_dst << "\tli\tt0, " << temp.second << "\n";
-			riscv_dst << "\tsw\t" << rval << ", t0(" << temp.first << ")\n";
+			riscv_dst << "\tadd\tt0, t0, " << temp.second << "\n";
+			riscv_dst << "\tsw\t" << rval << ", 0(t0)\n";
 		}
 		return;
 	}
-	if (rval.find('[')) // array load
+	if (rval.find('[') != string::npos) // array load
 	{
 		auto temp = parsearray(rval);
 		if (in_int12(temp.second))
@@ -166,7 +167,8 @@ void emit_assign(const shared_ptr<tigger::assign_stmt> &stmt)
 		else
 		{
 			riscv_dst << "\tli\tt0, " << temp.second << "\n";
-			riscv_dst << "\tsw\t" << lval << ", t0(" << temp.first << ")\n";
+			riscv_dst << "\tadd\tt0, t0, " << temp.first << "\n";
+			riscv_dst << "\tsw\t" << lval << ", 0(t0)\n";
 		}
 		return;
 	}
@@ -251,8 +253,9 @@ void emit_call(const shared_ptr<tigger::call_stmt> &stmt)
 
 void emit_ret(const shared_ptr<tigger::ret_stmt> &stmt)
 {
-	riscv_dst << "\tlw\tra, " << now_stk - 4 << "(sp)\naddi\tsp, sp, "
-			  << now_stk << "\n\tret\n";
+	riscv_dst << "\tli\tt0, " << now_stk << "\n";
+	riscv_dst << "\tadd\ts0, t0, sp\n\taddi\ts0, s0, -4\n\tlw\tra, "
+				 "0(s0)\n\tadd\tsp, sp, t0\n\tret\n";
 }
 
 inline bool in_int10(int num)

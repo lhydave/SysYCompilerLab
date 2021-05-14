@@ -39,7 +39,7 @@ enum stmt_t {
 	LOADADDR
 };
 
-vector<shared_ptr<stmt>> seq;
+extern vector<shared_ptr<stmt>> seq;
 
 struct stmt {
 	stmt_t stmt_type;

@@ -1,9 +1,9 @@
+#include "SysY.tab.hpp"
 #include "eeyore_AST.hpp"
 #include "node.hpp"
 #include "riscv/emit_riscv.hpp"
 #include "symtab.hpp"
 #include "tigger_gen.hpp"
-#include "SysY.tab.hpp"
 #include <cstdio>
 #include <sstream>
 #include <unistd.h>
@@ -18,7 +18,7 @@ std::ostringstream tigger_dst;
 std::ostringstream riscv_dst;
 int main(int argc, char **argv)
 {
-	const char *optstring = "Sve:t:o:";
+	const char *optstring = "S::ve:t:o:";
 	bool S = false, e = false, t = false, v = false;
 	string output_s;
 	char ch;
@@ -26,7 +26,10 @@ int main(int argc, char **argv)
 	{
 		switch (ch)
 		{
-		case 'S': S = true; break;
+		case 'S':
+			S = true;
+			yyin = fopen(optarg, "r");
+			break;
 		case 'e':
 			e = true;
 			yyin = fopen(optarg, "r");
@@ -88,11 +91,11 @@ int main(int argc, char **argv)
 	{
 		auto out_f = fopen("tigger.out", "w");
 		fprintf(out_f, "%s", tigger_dst.str().c_str());
-		return 0;
+		fflush(out_f);
 	}
 	// generate risc-v code
 	riscv::gen_code();
-	if (!e || !t)
+	if (!(e || t))
 	{
 		auto out_f = fopen(output_s.c_str(), "w");
 		fprintf(out_f, "%s", riscv_dst.str().c_str());
