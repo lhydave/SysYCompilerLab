@@ -235,9 +235,14 @@ void emit_goto(const shared_ptr<tigger::goto_stmt> &stmt)
 		temp >> ret[0] >> ret[1] >> ret[2];
 		return ret;
 	};
-	auto split = f(stmt->cond);
-	riscv_dst << "\t" << convert[split[1]] << "\t" << split[0] << ", "
-			  << split[2] << ", ." << stmt->goto_label << "\n";
+	if (!stmt->cond.empty())
+	{
+		auto split = f(stmt->cond);
+		riscv_dst << "\t" << convert[split[1]] << "\t" << split[0] << ", "
+				  << split[2] << ", ." << stmt->goto_label << "\n";
+	}
+	else
+		riscv_dst << "\tj\t.l" << stmt->goto_label << "\n";
 }
 
 void emit_label(const shared_ptr<tigger::label_stmt> &stmt)
