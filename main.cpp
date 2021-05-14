@@ -18,30 +18,32 @@ std::ostringstream tigger_dst;
 std::ostringstream riscv_dst;
 int main(int argc, char **argv)
 {
-	const char *optstring = "S:ve:t:o:";
 	bool S = false, e = false, t = false, v = false;
 	string output_s;
-	char ch;
-	while ((ch = getopt(argc, argv, optstring)) != -1)
+	// parse args
+	for (auto i = 0; i < argc; i++)
 	{
-		switch (ch)
+		if (argv[i][0] == '-')
 		{
-		case 'S':
-			S = true;
-			yyin = fopen(optarg, "r");
-			break;
-		case 'e':
-			e = true;
-			yyin = fopen(optarg, "r");
-			break;
-		case 't':
-			t = true;
-			yyin = fopen(optarg, "r");
-			break;
-		case 'v': v = true; break;
-		case 'o': output_s = optarg; break;
-		default: printf("Unknown parameter\n"); return 0;
+			switch (argv[i][1])
+			{
+			case 'S': S = true; break;
+			case 'e': e = true; break;
+			case 't': t = true; break;
+			case 'v': v = true; break;
+			case 'o':
+				if (argv[i + 1] == nullptr)
+				{
+					printf("no output file dedicated");
+					return 0;
+				}
+				output_s = argv[++i];
+				break;
+			default: printf("unrecognized parameter\n"); return 0;
+			}
 		}
+		else
+			yyin = fopen(argv[i], "r");
 	}
 	if (!S)
 	{
@@ -95,14 +97,9 @@ int main(int argc, char **argv)
 	}
 	// generate risc-v code
 	riscv::gen_code();
-	
-	//string ret =
-	//	"\t.text\n\t.align\t2\n\t.global\tmain\n\t.type\tmain, "
-	//	"@function\nmain:\n\tli\ta0, 0\n\tret\n\t.size\tmain, .-main\n";
 	if (!(e || t))
 	{
 		auto out_f = fopen(output_s.c_str(), "w");
-		//fprintf(out_f, "%s", ret.c_str());
 		fprintf(out_f, "%s", riscv_dst.str().c_str());
 		return 0;
 	}
