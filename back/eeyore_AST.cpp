@@ -135,7 +135,7 @@ static shared_ptr<op_node> parseop(const string &line)
 			line_f >> op >> right;
 			ret = make_shared<op_node>(
 				EXP_OP, op, parse_var_num(left), parse_var_num(right));
-			printf("left: %s, right: %s\n", left.c_str(), right.c_str());
+			dbg_printf("left: %s, right: %s\n", left.c_str(), right.c_str());
 		}
 		break;
 	}
