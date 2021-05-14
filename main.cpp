@@ -95,6 +95,7 @@ int main(int argc, char **argv)
 	}
 	// generate risc-v code
 	riscv::gen_code();
+	throw -1;
 	string ret =
 		"\t.text\n\t.align\t2\n\t.global\tmain\n\t.type\tmain, "
 		"@function\nmain:\n\tli\ta0, 0\n\tret\n\t.size\tmain, .-main\n";
