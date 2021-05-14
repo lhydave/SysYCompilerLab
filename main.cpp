@@ -18,7 +18,7 @@ std::ostringstream tigger_dst;
 std::ostringstream riscv_dst;
 int main(int argc, char **argv)
 {
-	const char *optstring = "S::ve:t:o:";
+	const char *optstring = "S:ve:t:o:";
 	bool S = false, e = false, t = false, v = false;
 	string output_s;
 	char ch;
@@ -56,7 +56,6 @@ int main(int argc, char **argv)
 	if (!yyin)
 	{
 		printf("no valid input file!\n");
-		throw -1;
 		return 0;
 	}
 	sysY_AST::init_tables();
