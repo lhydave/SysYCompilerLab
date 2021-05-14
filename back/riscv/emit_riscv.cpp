@@ -239,7 +239,7 @@ void emit_goto(const shared_ptr<tigger::goto_stmt> &stmt)
 	{
 		auto split = f(stmt->cond);
 		riscv_dst << "\t" << convert[split[1]] << "\t" << split[0] << ", "
-				  << split[2] << ", ." << stmt->goto_label << "\n";
+				  << split[2] << ", .l" << stmt->goto_label << "\n";
 	}
 	else
 		riscv_dst << "\tj\t.l" << stmt->goto_label << "\n";
