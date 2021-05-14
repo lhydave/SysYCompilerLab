@@ -253,9 +253,9 @@ void emit_call(const shared_ptr<tigger::call_stmt> &stmt)
 
 void emit_ret(const shared_ptr<tigger::ret_stmt> &stmt)
 {
-	riscv_dst << "\tli\tt0, " << now_stk << "\n";
-	riscv_dst << "\tadd\ts0, t0, sp\n\taddi\ts0, s0, -4\n\tlw\tra, "
-				 "0(s0)\n\tadd\tsp, sp, t0\n\tret\n";
+	riscv_dst << "\tli\tt0, " << now_stk - 4 << "\n";
+	riscv_dst << "\tadd\tt0, t0, sp\n\tlw\tra, 0(t0)\n\tli\t" << now_stk
+			  << "\n\tadd\tsp, sp, t0\n\tret\n";
 }
 
 inline bool in_int10(int num)
