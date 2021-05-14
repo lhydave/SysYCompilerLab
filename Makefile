@@ -21,6 +21,6 @@ eeyore-lex: front/SysY.l
 	$(LEX) -o lex.yy.cpp front/SysY.l
 
 clean:
-	rm -f compiler *.output *.out
+	rm -f compiler *.output *.out *.S
 	rm -f SysY.tab.cpp lex.yy.cpp SysY.tab.hpp
 	rm -rf *.dSYM .vscode .VSCodeCounter

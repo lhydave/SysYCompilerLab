@@ -275,7 +275,8 @@ void emit_store(const shared_ptr<tigger::store_stmt> &stmt)
 	else
 	{
 		riscv_dst << "\tli\tt0, " << stmt->num * 4 << "\n";
-		riscv_dst << "\tsw\t" << stmt->reg << ", t0(sp)\n";
+		riscv_dst << "\tadd\tt0, t0, sp\n";
+		riscv_dst << "\tsw\t" << stmt->reg << ", 0(t0)\n";
 	}
 }
 
@@ -289,7 +290,8 @@ void emit_load(const shared_ptr<tigger::load_stmt> &stmt)
 		else
 		{
 			riscv_dst << "\tli\tt0, " << num * 4 << "\n";
-			riscv_dst << "\tlw\t" << stmt->reg << ", t0(sp)\n";
+			riscv_dst << "\tadd\tt0, t0, sp\n";
+			riscv_dst << "\tlw\t" << stmt->reg << ", 0(t0)\n";
 		}
 	}
 	else // global_var
