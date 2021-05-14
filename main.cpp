@@ -22,7 +22,6 @@ int main(int argc, char **argv)
 	bool S = false, e = false, t = false, v = false;
 	string output_s;
 	char ch;
-	throw -1;
 	while ((ch = getopt(argc, argv, optstring)) != -1)
 	{
 		switch (ch)
@@ -57,6 +56,7 @@ int main(int argc, char **argv)
 	if (!yyin)
 	{
 		printf("no valid input file!\n");
+		throw -1;
 		return 0;
 	}
 	sysY_AST::init_tables();
