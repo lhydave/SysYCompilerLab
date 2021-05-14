@@ -34,7 +34,7 @@ void yyerror(const char *msg, int lineno)
 	fprintf(stderr, "error happens near line %d: %s\n", lineno, msg);
 }
 
-namespace sysY_AST{
+namespace sysY_AST {
 // allocate a new space for string
 char *namestr(const char *s)
 {
@@ -368,9 +368,10 @@ void funcdef_node::gen_code()
 					"\n";
 			else // an array
 				for (auto i = 0; i < var.val.size(); i++)
-					code += "\t" + var.eeyore_name + "[" +
-						to_string(i * int_size) +
-						"] = " + to_string(var.val[i]) + "\n";
+					if (var.val[i])
+						code += "\t" + var.eeyore_name + "[" +
+							to_string(i * int_size) +
+							"] = " + to_string(var.val[i]) + "\n";
 		}
 	}
 	// concatenate the block
